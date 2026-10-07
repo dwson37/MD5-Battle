@@ -1,0 +1,1820 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MD5 대결</title>
+<meta name="description" content="두 문자열의 MD5 해시값으로 캐릭터를 만들어 대결하는 교육용 웹 게임">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A5%8A%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff5f9; --ink:#4b3a52; --ink2:#85718c; --card:#fff; --line:#f3dfe9; --line2:#ead2df;
+  --pink:#ff6fa5; --pink-d:#df4f88; --pink-l:#ffe3ee;
+  --blue:#6f8bff; --blue-d:#4f69e0; --blue-l:#e4e9ff;
+  --L:#ff6fa5; --L-d:#df4f88; --L-l:#ffe3ee;
+  --R:#6f8bff; --R-d:#4f69e0; --R-l:#e4e9ff;
+  --ts:1;
+  --f-body:'Gowun Dodum','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  --f-title:'Jua','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  --f-mono:ui-monospace,'Cascadia Mono',Consolas,'D2Coding',Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--f-body);color:var(--ink);background-color:var(--bg);
+  background-image:radial-gradient(#ffd6e7 1.3px,transparent 1.4px);background-size:24px 24px;
+  line-height:1.6;min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:var(--f-title);font-weight:400;line-height:1.3}
+button{font:inherit;font-family:var(--f-title);color:inherit;cursor:pointer}
+input{font:inherit;color:inherit}
+code,.mono{font-family:var(--f-mono)}
+[hidden]{display:none!important}
+
+/* ---------- 상단 ---------- */
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;
+  padding:14px clamp(12px,3vw,28px);max-width:1200px;margin:0 auto}
+.logo{margin:0;font-size:clamp(30px,5vw,42px);display:flex;align-items:center;gap:8px;letter-spacing:1px}
+.logo .glove{display:inline-block;animation:glove 2.4s ease-in-out infinite}
+.logo .t1{color:var(--pink)} .logo .t2{color:var(--blue)}
+@keyframes glove{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(12deg) translateY(-3px)}}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line2);background:#fff;border-radius:999px;padding:7px 14px;font-size:15px;
+  box-shadow:0 3px 0 var(--line2);transition:transform .08s,box-shadow .08s}
+.chip:hover{transform:translateY(-1px)}
+.chip:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line2)}
+.chip.primary{background:var(--pink);border-color:var(--pink-d);color:#fff;box-shadow:0 3px 0 var(--pink-d)}
+.chip.on{background:#fff9d9;border-color:#f2d77a;box-shadow:0 3px 0 #f2d77a}
+main{max-width:1200px;margin:0 auto;padding:0 clamp(12px,3vw,28px) 30px}
+.view{display:none}
+.view.active{display:block;animation:viewIn .35s ease-out}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.intro{text-align:center;margin:0 auto 18px;max-width:760px;color:var(--ink2);font-size:16px}
+.intro b{color:var(--ink)}
+.link{border:0;background:none;color:var(--blue-d);text-decoration:underline;text-underline-offset:3px;
+  padding:0 2px;font-family:var(--f-body);font-size:inherit}
+
+/* ---------- 입력 화면 ---------- */
+.players{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start}
+.vs-col{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:150px}
+.vs-col .big-btn{font-size:21px;padding:12px 22px;white-space:nowrap}
+.vs{font-family:var(--f-title);font-size:40px;color:#fff;background:linear-gradient(135deg,var(--pink),var(--blue));
+  width:76px;height:76px;border-radius:50%;display:grid;place-items:center;box-shadow:0 5px 0 rgba(0,0,0,.08);
+  animation:vsPulse 1.6s ease-in-out infinite}
+@keyframes vsPulse{50%{transform:scale(1.08) rotate(-4deg)}}
+.pcard{background:var(--card);border-radius:26px;padding:18px;border:3px solid var(--line);
+  box-shadow:0 6px 0 var(--line),0 16px 30px rgba(150,80,120,.07);min-width:0}
+.pcard[data-side=L]{--side:var(--L);--side-d:var(--L-d);--side-l:var(--L-l)}
+.pcard[data-side=R]{--side:var(--R);--side-d:var(--R-d);--side-l:var(--R-l)}
+.side-tag{display:inline-block;font-family:var(--f-title);background:var(--side);color:#fff;border-radius:999px;
+  padding:3px 14px;font-size:16px;box-shadow:0 3px 0 var(--side-d)}
+.name-in{width:100%;margin-top:12px;font-size:20px;padding:12px 16px;border:3px solid var(--line2);border-radius:16px;
+  outline:none;background:#fffdfe;transition:border-color .15s,box-shadow .15s}
+.name-in:focus{border-color:var(--side);box-shadow:0 0 0 4px var(--side-l)}
+.len-info{font-size:13px;color:var(--ink2);margin:6px 4px 0;min-height:1.2em}
+.preview{position:relative;height:215px;margin:10px 0 8px;border-radius:20px;background:linear-gradient(#eaf7ff,#fff4fa);
+  overflow:hidden;display:flex;align-items:flex-end;justify-content:center;padding-bottom:28px}
+.preview::after{content:'';position:absolute;left:-10%;right:-10%;bottom:-30px;height:62px;background:#c8f2cb;border-radius:50%/100% 100% 0 0}
+.pv-slot{position:relative;z-index:1}
+.preview .fighter{--size:112px}
+.pv-q{position:absolute;z-index:2;font-family:var(--f-title);font-size:30px;color:var(--side);top:26px;right:24%;animation:qFloat 2.2s ease-in-out infinite}
+.pv-q.q2{font-size:22px;top:58px;right:auto;left:22%;animation-delay:-1.1s;opacity:.75}
+@keyframes qFloat{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-10px) rotate(10deg)}}
+.hash-box{background:#fbf7ff;border:2px dashed #e3d6f3;border-radius:16px;padding:10px 12px}
+.hash-label{font-family:var(--f-title);font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px}
+.hash-label .link{font-size:13px}
+.chunks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.chunk{border-radius:12px;padding:3px 2px 4px;text-align:center;line-height:1.25}
+.chunk .ci{font-size:13px;display:block}
+.chunk code{font-size:15px;font-weight:700;color:#a898b0;letter-spacing:1px}
+.mystery-note{font-size:13px;color:var(--ink2);margin:8px 2px 0;text-align:center}
+.type-pill{display:inline-block;padding:0 10px;border-radius:999px;font-family:var(--f-title);font-size:14px;background:#f1ecf4}
+details summary{cursor:pointer;padding:8px 12px;font-family:var(--f-title);list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'▸';display:inline-block;margin-right:6px;transition:transform .2s}
+details[open]>summary::before{transform:rotate(90deg)}
+details.calc{margin-top:12px;border-radius:14px;background:#fffaf2;border:2px solid #f6e6c8}
+.calc-wrap{overflow-x:auto;padding:0 10px 4px}
+.calc-note{font-size:13px;color:var(--ink2);margin:6px 12px 10px}
+table.t{border-collapse:collapse;width:100%;font-size:13px}
+table.t th,table.t td{padding:5px 6px;border-bottom:1px solid #f0e3ea;text-align:left;vertical-align:top}
+table.t th{font-family:var(--f-title);font-weight:400;color:var(--ink2);white-space:nowrap}
+table.t td.n{white-space:nowrap}
+table.t code{padding:0 4px;border-radius:5px}
+.center{text-align:center}
+.mstart{display:none}
+.big-btn{font-size:clamp(22px,4vw,28px);padding:14px 44px;color:#fff;border:0;border-radius:999px;
+  background:linear-gradient(180deg,#ff8dbb,#ff5f9d);box-shadow:0 6px 0 #d4437e,0 12px 24px rgba(255,95,157,.3);
+  transition:transform .1s,box-shadow .1s}
+.big-btn:hover{animation:wiggle .5s ease-in-out}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #d4437e}
+@keyframes wiggle{25%{transform:rotate(-3deg) scale(1.03)}75%{transform:rotate(3deg) scale(1.03)}}
+.btn{border:0;border-radius:999px;padding:10px 22px;font-size:17px;color:#fff;background:var(--blue);box-shadow:0 4px 0 var(--blue-d)}
+.btn.pink{background:var(--pink);box-shadow:0 4px 0 var(--pink-d)}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--line2);box-shadow:0 4px 0 var(--line2)}
+.btn:active{transform:translateY(3px);box-shadow:none}
+.hint{font-size:13px;color:var(--ink2);margin-top:8px}
+
+/* ---------- 캐릭터 ---------- */
+.fighter{--size:150px;--dir:1;position:relative;width:var(--size);display:flex;flex-direction:column;align-items:center}
+.fighter.side-R{--dir:-1}
+.type-x{--c1:#ffffff;--c2:#ebe5f0}
+.type-0{--c1:#ffe3d2;--c2:#ff9f80}
+.type-1{--c1:#e0f3ff;--c2:#86c8ff}
+.type-2{--c1:#e4fbe2;--c2:#8edc97}
+.f-move{position:relative;width:100%;display:flex;justify-content:center}
+.f-bob{position:relative;animation:bob 1.8s ease-in-out infinite}
+.side-R .f-bob{animation-delay:-.9s}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-6px) scale(1.02,.98)}}
+.f-body{position:relative;width:var(--size);height:calc(var(--size) * .86);
+  border-radius:50% 50% 46% 46%/58% 58% 42% 42%;
+  background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.95) 0 7%,transparent 8%),linear-gradient(160deg,var(--c1),var(--c2));
+  box-shadow:inset -8px -10px 0 rgba(0,0,0,.06),0 5px 0 rgba(0,0,0,.06);border:3px solid rgba(255,255,255,.8);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2}
+.f-text{font-family:var(--f-title);font-size:calc(var(--size) * var(--tscale,.3));line-height:1.1;white-space:pre;
+  max-width:94%;overflow:hidden;text-align:center;color:#4b3a52;text-shadow:0 2px 0 rgba(255,255,255,.75)}
+.f-face{display:flex;align-items:center;gap:calc(var(--size) * .05);margin-top:calc(var(--size) * .03)}
+.f-mouth{font-size:calc(var(--size) * .13);color:#3b2b40;font-family:'Segoe UI Symbol','Apple SD Gothic Neo','Malgun Gothic',sans-serif;white-space:pre;line-height:1}
+.blush{width:calc(var(--size) * .12);height:calc(var(--size) * .06);border-radius:50%;background:#ff8fb1;opacity:.55}
+.f-feet{position:absolute;bottom:calc(var(--size) * -.05);display:flex;gap:calc(var(--size) * .3);z-index:-1}
+.f-feet i{display:block;width:calc(var(--size) * .2);height:calc(var(--size) * .1);border-radius:50%;background:var(--c2);filter:brightness(.92)}
+.f-head{position:absolute;top:calc(var(--size) * -.25);left:50%;transform:translateX(-50%);font-size:calc(var(--size) * .3);z-index:3;line-height:1}
+.f-weapon{position:absolute;top:30%;font-size:calc(var(--size) * .36);z-index:4;line-height:1;transform-origin:20% 85%}
+.side-L .f-weapon{right:calc(var(--size) * -.28)}
+.side-R .f-weapon{left:calc(var(--size) * -.28);transform-origin:80% 85%}
+.side-R .f-weapon>span{display:inline-block;transform:scaleX(-1)}
+.f-shield{position:absolute;top:44%;font-size:calc(var(--size) * .26);z-index:4;line-height:1}
+.f-shield.big{font-size:calc(var(--size) * .34);top:38%}
+.side-L .f-shield{left:calc(var(--size) * -.2)}
+.side-R .f-shield{right:calc(var(--size) * -.2)}
+.f-tag{margin-top:12px;font-size:14px;background:#fff;padding:1px 10px;border-radius:999px;box-shadow:0 2px 0 #eedbe6;white-space:nowrap}
+
+.f-move.lunge{animation:lunge calc(560ms / var(--ts)) cubic-bezier(.3,.7,.4,1)}
+@keyframes lunge{0%{transform:translateX(0)}15%{transform:translateX(calc(var(--dir) * -14px))}
+  45%{transform:translateX(calc(var(--dir) * var(--lunge,120px)))}100%{transform:translateX(0)}}
+.f-weapon.swing{animation:swing calc(560ms / var(--ts)) ease-out}
+@keyframes swing{0%{transform:rotate(0)}25%{transform:rotate(calc(var(--dir) * -55deg))}50%{transform:rotate(calc(var(--dir) * 75deg))}100%{transform:rotate(0)}}
+.f-body.hit{animation:hit calc(400ms / var(--ts))}
+@keyframes hit{0%{transform:none;filter:none}20%{transform:translateX(calc(var(--dir) * -14px)) scale(.94,1.05);filter:brightness(1.5) saturate(.5)}
+  45%{transform:translateX(calc(var(--dir) * 8px))}70%{transform:translateX(calc(var(--dir) * -4px))}100%{transform:none;filter:none}}
+.f-move.dodge{animation:dodge calc(500ms / var(--ts)) ease-out}
+@keyframes dodge{0%{transform:none}40%{transform:translateX(calc(var(--dir) * -52px)) translateY(-26px) rotate(calc(var(--dir) * -12deg))}100%{transform:none}}
+.f-move.ko{animation:ko calc(1300ms / var(--ts)) ease-in forwards}
+@keyframes ko{0%{transform:none;opacity:1}30%{transform:translateY(-34px) rotate(calc(var(--dir) * -70deg))}
+  100%{transform:translateX(calc(var(--dir) * -170px)) translateY(12px) rotate(calc(var(--dir) * -540deg));opacity:.35}}
+.is-ko .f-bob{animation:none}
+/* 장착 연출 */
+.fighter .hid{opacity:0}
+.f-head.drop{animation:dropIn .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes dropIn{0%{transform:translate(-50%,-140px);opacity:0}50%{opacity:1}100%{transform:translate(-50%,0)}}
+.f-shield.flyin{animation:flyS .45s cubic-bezier(.3,1.4,.5,1)}
+@keyframes flyS{0%{transform:translateX(calc(var(--dir) * -90px)) rotate(calc(var(--dir) * -90deg)) scale(.4);opacity:0}100%{transform:none;opacity:1}}
+.f-weapon.flyin{animation:flyW .5s cubic-bezier(.3,1.4,.5,1)}
+@keyframes flyW{0%{transform:translateX(calc(var(--dir) * 110px)) rotate(calc(var(--dir) * 360deg)) scale(.4);opacity:0}100%{transform:none;opacity:1}}
+.f-body.pump{animation:pump .2s ease-out}
+@keyframes pump{50%{transform:scale(1.06,.95)}}
+.f-body.pulse{animation:pulse .6s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pulse{0%{transform:scale(1)}35%{transform:scale(1.18);filter:brightness(1.2)}100%{transform:scale(1)}}
+.f-move.win{animation:win .7s ease-in-out infinite}
+@keyframes win{0%,100%{transform:translateY(0)}50%{transform:translateY(-26px)}}
+
+/* ---------- 경기장 ---------- */
+.battle-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap}
+.arena{background:#fff;border-radius:28px;padding:14px;border:3px solid var(--line);box-shadow:0 6px 0 var(--line)}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:10px}
+.hp-box{min-width:0}
+.hp-name{display:flex;align-items:center;gap:6px;font-family:var(--f-title);font-size:clamp(15px,2.4vw,20px);min-width:0}
+.hp-box.R .hp-name{justify-content:flex-end}
+.hp-name .who{white-space:pre;overflow:hidden;text-overflow:ellipsis}
+.hp-name .dot{width:12px;height:12px;border-radius:50%;flex:0 0 auto}
+.hp-box.L .dot{background:var(--L)} .hp-box.R .dot{background:var(--R)}
+.hpbar{position:relative;height:clamp(14px,2.2vw,20px);background:#f3e8ee;border-radius:999px;overflow:hidden;border:2px solid #ead7e1}
+.hpbar .ghost,.hpbar .fill{position:absolute;top:0;bottom:0;width:100%;border-radius:999px}
+.hp-box.L .ghost,.hp-box.L .fill{left:0}
+.hp-box.R .ghost,.hp-box.R .fill{right:0}
+.hpbar .ghost{background:#ffb3c7;transition:width calc(.6s / var(--ts)) ease calc(.35s / var(--ts))}
+.hpbar .fill{background:linear-gradient(#8ef0b5,#45d18a);transition:width calc(.25s / var(--ts)) ease}
+.hpbar .fill.mid{background:linear-gradient(#ffe28a,#ffc23d)}
+.hpbar .fill.low{background:linear-gradient(#ff9fb0,#ff5c7c)}
+.hp-num{font-size:13px;color:var(--ink2);font-family:var(--f-mono)}
+.hp-box.R .hp-num{text-align:right}
+.round-box{display:flex;flex-direction:column;align-items:center;gap:4px}
+.round{font-family:var(--f-title);font-size:clamp(17px,3vw,26px);background:var(--ink);color:#fff;border-radius:16px;padding:2px 14px;min-width:70px;text-align:center}
+.round.bump{animation:bump .3s}
+@keyframes bump{40%{transform:scale(1.2)}}
+.ff{font-family:var(--f-title);font-size:13px;background:#ffcf3d;border-radius:999px;padding:0 10px;white-space:nowrap;animation:ffBlink .5s ease-in-out infinite alternate}
+.ff.final{background:#ff6f91;color:#fff;animation:none}
+@keyframes ffBlink{to{transform:scale(1.08)}}
+.stage{position:relative;height:clamp(250px,40vw,380px);border-radius:22px;overflow:hidden;
+  background:linear-gradient(#c9ecff 0%,#e9f6ff 45%,#fff3f8 78%)}
+.sun{position:absolute;top:18px;right:8%;width:52px;height:52px;border-radius:50%;background:#fff1a8;box-shadow:0 0 0 10px rgba(255,241,168,.45)}
+.cloud{position:absolute;background:#fff;border-radius:999px;opacity:.95;animation:cloud 36s ease-in-out infinite}
+.cloud::before,.cloud::after{content:'';position:absolute;background:#fff;border-radius:50%}
+.cloud.c1{top:30px;left:8%;width:90px;height:26px}
+.cloud.c1::before{width:40px;height:40px;left:14px;top:-20px}.cloud.c1::after{width:30px;height:30px;left:46px;top:-13px}
+.cloud.c2{top:74px;left:58%;width:70px;height:22px;animation-duration:48s;animation-direction:reverse}
+.cloud.c2::before{width:32px;height:32px;left:10px;top:-16px}.cloud.c2::after{width:24px;height:24px;left:34px;top:-10px}
+@keyframes cloud{0%,100%{transform:translateX(-30px)}50%{transform:translateX(40px)}}
+.ground{position:absolute;left:-10%;right:-10%;bottom:-50px;height:120px;background:#bfeec4;border-radius:50%/60px 60px 0 0;box-shadow:inset 0 10px 0 #d8f8d6}
+.slot{position:absolute;bottom:38px;z-index:5}
+.slot.L{left:11%} .slot.R{right:11%}
+.stage .fighter{--size:clamp(90px,15vw,150px)}
+.stage.final::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;
+  box-shadow:inset 0 0 0 5px #ff9cbc;animation:finalGlow 1s ease-in-out infinite}
+@keyframes finalGlow{50%{box-shadow:inset 0 0 0 10px #ffc2d6}}
+.stage.fast::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:4;
+  background:repeating-linear-gradient(100deg,transparent 0 60px,rgba(255,255,255,.6) 60px 64px,transparent 64px 130px);
+  background-size:260px 100%;animation:speedlines .25s linear infinite}
+@keyframes speedlines{to{background-position:-260px 0}}
+.flash{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:24;background:#fff}
+.flash.on{animation:flash calc(380ms / var(--ts)) ease-out}
+.flash.crit{background:#fff4a8}.flash.special{background:#e6d4ff}
+@keyframes flash{0%{opacity:.85}100%{opacity:0}}
+.arena.shake .stage{animation:shake calc(420ms / var(--ts))}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-4px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+.pop{position:absolute;transform:translate(-50%,0);font-family:var(--f-title);font-size:clamp(26px,4vw,36px);color:#ff4f8b;pointer-events:none;z-index:20;white-space:nowrap;
+  text-shadow:2px 2px 0 #fff,-2px 2px 0 #fff,2px -2px 0 #fff,-2px -2px 0 #fff,0 3px 0 #fff,0 6px 0 rgba(0,0,0,.1);
+  animation:pop calc(900ms / var(--ts)) ease-out forwards}
+.pop.crit{font-size:clamp(34px,5.5vw,48px);color:#ff9800}
+.pop.special{font-size:clamp(38px,6vw,56px);color:#8b4fe0}
+.pop.miss{color:#7d93ab;font-size:clamp(22px,3.4vw,30px)}
+.pop.note{font-size:15px;color:var(--ink);background:#fff;padding:1px 10px;border-radius:999px;text-shadow:none;box-shadow:0 2px 0 #eedbe6}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,10px) scale(.5)}20%{opacity:1;transform:translate(-50%,-12px) scale(1.15)}
+  35%{transform:translate(-50%,-16px) scale(1)}100%{opacity:0;transform:translate(-50%,-64px)}}
+.banner{position:absolute;left:50%;top:40%;z-index:30;font-family:var(--f-title);font-size:clamp(28px,6.5vw,62px);color:#fff;
+  white-space:pre;pointer-events:none;--bc:#e04f89;transform:translate(-50%,-50%);
+  text-shadow:3px 3px 0 var(--bc),-3px 3px 0 var(--bc),3px -3px 0 var(--bc),-3px -3px 0 var(--bc),0 4px 0 var(--bc),0 -4px 0 var(--bc),4px 0 0 var(--bc),-4px 0 0 var(--bc),0 10px 0 rgba(0,0,0,.12);
+  animation:banner var(--bd,1000ms) ease-out forwards}
+.banner.b-blue{--bc:#4f69e0}.banner.b-purple{--bc:#8b4fe0}.banner.b-gold{--bc:#e09a00}.banner.b-red{--bc:#e0405c}.banner.b-mint{--bc:#22a979}
+@keyframes banner{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}22%{opacity:1;transform:translate(-50%,-50%) scale(1.12) rotate(3deg)}
+  36%{transform:translate(-50%,-50%) scale(1) rotate(0)}82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) scale(1)}}
+.confetti{position:absolute;top:-14px;width:10px;height:14px;border-radius:3px;z-index:22;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--rx,0),calc(clamp(250px,40vw,380px) + 30px)) rotate(760deg)}}
+.ticker{margin-top:10px;min-height:50px;background:#fbf7ff;border-radius:14px;padding:10px 14px;font-size:clamp(14px,2vw,16px);
+  white-space:pre-wrap;word-break:break-all;border:2px solid #ece2f6}
+.ticker.in{animation:tickIn .25s ease-out}
+@keyframes tickIn{from{opacity:.2;transform:translateY(4px)}}
+.skip{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;border:0;border-radius:999px;padding:8px 20px;
+  font-size:clamp(16px,2.4vw,19px);background:#ffcf3d;color:var(--ink);box-shadow:0 4px 0 #dba400,0 8px 18px rgba(0,0,0,.12);
+  animation:skipPulse .9s ease-in-out infinite alternate}
+.skip:active{box-shadow:0 1px 0 #dba400;margin-top:3px}
+@keyframes skipPulse{to{transform:translateX(-50%) scale(1.07)}}
+
+/* 경기장 아래 능력치 카드 */
+.scards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.scard{border:2px solid var(--line);border-top:5px solid var(--sc);border-radius:18px;padding:10px 12px;background:#fffdfe;min-width:0}
+.scard[data-side=L]{--sc:var(--L)} .scard[data-side=R]{--sc:var(--R)}
+.sc-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--f-title);font-size:17px}
+.sc-head .who{white-space:pre;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.sc-eq{font-size:13px;color:var(--ink2);margin:2px 0}
+.sc-hash{font-family:var(--f-mono);font-size:12px;color:var(--ink);word-break:break-all;margin:2px 0 6px;letter-spacing:.3px}
+.sc-hash .q{color:#cdbfd4}
+.sc-rows{display:grid;gap:3px}
+.sc-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto 48px;align-items:center;gap:6px;font-size:14px;border-radius:8px;padding:1px 4px}
+.sc-row .sn{font-family:var(--f-title);white-space:nowrap;overflow:hidden}
+.sc-row .hx{font-size:13px;font-weight:700;padding:0 5px;border-radius:6px;background:var(--hc);min-width:3.6em;text-align:center}
+.sc-row .hx.spin{color:#a493ad}
+.sc-row .sv{text-align:right;font-family:var(--f-title);font-size:15px;white-space:nowrap}
+.sc-row .sb{grid-column:1/-1;height:5px;background:#f3eaf0;border-radius:999px;overflow:hidden}
+.sc-row .sb i{display:block;height:100%;width:0;background:var(--bc);border-radius:999px;transition:width .35s cubic-bezier(.3,1.4,.5,1)}
+.sc-row.lock{animation:rowLock .45s ease-out}
+@keyframes rowLock{0%{background:#fff3b0;transform:scale(1.05)}100%{background:transparent;transform:none}}
+.scards.compact .sc-row .sb{display:none}
+.scards.compact .sc-row{font-size:13px}
+.scard details.calc{margin-top:8px}
+@media (min-width:861px){ .sc-rows{grid-template-columns:1fr 1fr;column-gap:12px} }
+
+/* ---------- 결과 ---------- */
+.result{margin-top:16px;background:#fff;border-radius:28px;padding:20px;border:3px solid var(--line);box-shadow:0 6px 0 var(--line);animation:viewIn .4s}
+.win-title{text-align:center;font-size:clamp(26px,5vw,40px);margin:0;white-space:pre-wrap;word-break:break-all}
+.win-reason{text-align:center;color:var(--ink2);margin:4px 0 14px}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{background:#fffafd;border:2px solid var(--line);border-radius:20px;padding:14px;min-width:0}
+.panel h3{margin:0 0 8px;font-size:20px}
+.radar{display:block;width:100%;max-width:330px;margin:0 auto}
+.radar text{font-family:var(--f-title)}
+.legend{display:flex;gap:14px;justify-content:center;font-size:14px;flex-wrap:wrap;margin:4px 0 10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px}
+.cmp td{text-align:center!important}
+.cmp td.w{font-weight:700}
+.cmp td.w.L{color:var(--L-d)} .cmp td.w.R{color:var(--R-d)}
+.seed-box{font-family:var(--f-mono);font-size:13px;background:#f6f1ff;border-radius:12px;padding:10px;word-break:break-all;line-height:1.7;margin:8px 0}
+.panel p{margin:6px 0;font-size:15px}
+details.log{margin-top:16px;background:#fbf7ff;border:2px solid #ece2f6;border-radius:18px}
+.log-wrap{max-height:440px;overflow:auto;padding:0 10px 10px}
+.log-wrap tr.ko td{background:#ffe9ef}
+.log-wrap tr.miss td{color:var(--ink2)}
+.log-wrap .sd{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.log-wrap td.who{white-space:pre}
+
+/* ---------- 배움터 ---------- */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(75,58,82,.45);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}}
+.modal-box{background:#fff;border-radius:28px;width:min(1000px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);animation:popIn .3s cubic-bezier(.3,1.4,.5,1)}
+@keyframes popIn{from{transform:scale(.92);opacity:0}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:linear-gradient(90deg,var(--pink-l),var(--blue-l))}
+.modal-head h2{margin:0;font-size:24px}
+.x{border:0;background:#fff;width:40px;height:40px;border-radius:50%;font-size:18px;box-shadow:0 3px 0 var(--line2);flex:0 0 auto}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 14px;border-bottom:2px solid var(--line);flex:0 0 auto}
+.tab{flex:0 0 auto;border:2px solid var(--line2);background:#fff;border-radius:999px;padding:4px 12px;font-size:15px}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.modal-body{overflow-y:auto;padding:4px clamp(16px,3vw,32px) 30px;font-size:16px}
+.pane{display:none}
+.pane.on{display:block;animation:viewIn .25s}
+.pane h2{font-size:26px;margin:16px 0 8px}
+.pane h3{font-size:20px;margin:24px 0 6px;color:var(--pink-d)}
+.pane ul,.pane ol{padding-left:22px}
+.pane li{margin:3px 0}
+.box{border-radius:16px;padding:12px 14px;margin:10px 0;background:#fff8e6;border:2px solid #f6e3b4}
+.box.blue{background:#eef4ff;border-color:#d4defc}
+.box.pink{background:#fff0f6;border-color:#fbd3e3}
+.box.green{background:#ecfbf2;border-color:#c5efd6}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0}
+.card{background:#fff;border:2px solid var(--line);border-radius:18px;padding:12px 14px}
+.card h4{margin:0 0 4px;font-size:18px}
+.card p{margin:0;font-size:15px}
+.hexgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-width:560px}
+.hexgrid div{background:#f6f1ff;border-radius:10px;text-align:center;padding:4px 0;font-size:12px;color:var(--ink2)}
+.hexgrid b{display:block;font-family:var(--f-mono);font-size:18px;color:var(--ink)}
+.diffhash{font-family:var(--f-mono);font-size:clamp(13px,2.2vw,16px);word-break:break-all;letter-spacing:.5px}
+.diffhash .d{background:#ffd34d;border-radius:3px}
+.bitgrid{display:grid;grid-template-columns:repeat(32,1fr);gap:2px;max-width:640px;margin:10px 0 4px}
+.bitgrid i{aspect-ratio:1;border-radius:2px;background:#e4dcea}
+.bitgrid i.d{background:#ff6fa5}
+.lab-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lab-grid label{font-family:var(--f-title)}
+.lab-in{width:100%;font-size:18px;padding:9px 14px;border:3px solid var(--line2);border-radius:14px;outline:none;background:#fffdfe;font-family:var(--f-body)}
+.lab-in:focus{border-color:var(--pink)}
+.qbtns{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.bytes{display:flex;flex-wrap:wrap;gap:6px}
+.bchar{background:#f6f1ff;border-radius:10px;padding:4px 8px;text-align:center}
+.bchar .c{font-size:18px;display:block;white-space:pre;font-family:var(--f-title)}
+.bchar code{font-size:12px}
+.padblk{margin:8px 0}
+.padblk .lbl{font-size:13px;color:var(--ink2);font-family:var(--f-title)}
+.padgrid{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;max-width:640px;font-family:var(--f-mono);font-size:11px}
+.padgrid span{text-align:center;padding:2px 0;border-radius:3px;background:#efebf2;color:#9a8aa0}
+.padgrid .m{background:#ffd9e8;color:var(--ink)}.padgrid .p{background:#ff6fa5;color:#fff}.padgrid .l{background:#cfd7ff;color:var(--ink)}
+.pad-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.pad-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.formula{font-family:var(--f-mono);background:#f6f1ff;border-radius:12px;padding:10px 14px;overflow-x:auto;white-space:pre;font-size:14px;line-height:1.7;margin:8px 0}
+.timeline{list-style:none;padding:0!important;margin:0 0 0 8px;border-left:3px dashed #f3c2d6}
+.timeline li{position:relative;padding:4px 0 10px 18px}
+.timeline li::before{content:'';position:absolute;left:-10px;top:10px;width:14px;height:14px;border-radius:50%;background:var(--pink);border:3px solid #fff}
+.timeline b{font-family:var(--f-title);font-weight:400;color:var(--pink-d);margin-right:4px}
+details.deep{border:2px solid var(--line);border-radius:16px;margin:12px 0;background:#fffdfe}
+details.deep>summary{font-size:18px;padding:10px 14px}
+details.deep>div{padding:0 16px 14px}
+.num-in{width:6em;font-size:18px;padding:4px 10px;border:3px solid var(--line2);border-radius:12px}
+
+footer{text-align:center;font-size:13px;color:var(--ink2);padding:10px 16px 30px}
+
+/* ---------- 효과 줄이기 ---------- */
+.lowfx .flash,.lowfx .confetti,.lowfx .stage.fast::after{display:none!important}
+.lowfx .arena.shake .stage{animation:none}
+.lowfx .f-body.hit{animation-name:hitSoft}
+@keyframes hitSoft{50%{transform:translateX(calc(var(--dir) * -6px))}}
+.lowfx .stage.final::before{animation:none}
+.lowfx .ff{animation:none}
+
+/* ---------- 반응형 ---------- */
+@media (max-width:860px){
+  .players{grid-template-columns:1fr}
+  .vs-col{flex-direction:row;padding-top:0;justify-content:center}
+  .vs{width:58px;height:58px;font-size:28px}
+  .vs-col .big-btn{display:none}
+  body.on-setup .mstart{display:flex}
+  body.on-setup main{padding-bottom:96px}
+  .mstart{position:fixed;left:0;right:0;bottom:0;z-index:50;justify-content:center;
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(rgba(255,245,249,0),rgba(255,245,249,.96) 35%)}
+  .mstart .big-btn{width:100%;max-width:420px}
+  .res-grid{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  .modal{padding:0}
+  .modal-box{border-radius:0;max-height:100vh;height:100vh;height:100dvh}
+  .hexgrid{grid-template-columns:repeat(4,1fr)}
+  .bitgrid{grid-template-columns:repeat(16,1fr)}
+  .lab-grid{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  .slot.L{left:6%} .slot.R{right:6%}
+  .hp-num{font-size:11px}
+  .round{min-width:56px;padding:2px 8px}
+  .arena{padding:10px;border-radius:22px}
+  .scards{gap:6px}
+  .scard{padding:8px 7px;border-radius:14px}
+  .sc-head{font-size:14px}
+  .sc-hash{font-size:10.5px}
+  .sc-row{grid-template-columns:16px minmax(0,1fr) auto 36px;gap:3px;font-size:12px;padding:1px 2px}
+  .sc-row .hx{font-size:11px;padding:0 3px;min-width:3.3em}
+  .sc-row .sv{font-size:13px}
+  .scards.compact .sc-row{font-size:12px}
+}
+</style>
+</head>
+<body class="on-setup">
+
+<header class="topbar">
+  <h1 class="logo"><span class="glove">🥊</span><span class="t1">MD5</span><span class="t2">대결</span></h1>
+  <div class="tools">
+    <button id="btnSound" class="chip" type="button" aria-pressed="false">🔇 소리 꺼짐</button>
+    <button id="btnFx" class="chip" type="button" aria-pressed="true">✨ 효과 켜짐</button>
+    <button class="chip primary" type="button" data-open="intro">📘 해시 배움터</button>
+  </div>
+</header>
+
+<main>
+  <!-- 입력 화면 -->
+  <section id="setup" class="view active">
+    <p class="intro">두 문자열을 입력하고 <b>대결 시작</b>을 누르면 <b>MD5 해시값</b>이 공개되며 캐릭터가 태어나요!<br>
+      해시값 32자리를 <b>4자리씩 8조각</b>으로 나눠 능력치와 장비를 정하고, 글자가 직접 무기를 들고 싸워요.
+      <button class="link" type="button" data-open="game">어떻게 정해지나요?</button></p>
+    <div class="players">
+      <div class="pcard" data-side="L"></div>
+      <div class="vs-col">
+        <div class="vs">VS</div>
+        <button class="big-btn btn-start" type="button">⚔️ 대결 시작!</button>
+        <button id="btnSwap" class="chip" type="button">🔀 좌우 바꾸기</button>
+      </div>
+      <div class="pcard" data-side="R"></div>
+    </div>
+    <p class="hint center">공백·특수문자·이모지·빈 문자열까지 입력한 그대로 해시해요.</p>
+  </section>
+
+  <!-- 대결 화면 -->
+  <section id="battle" class="view">
+    <div class="battle-top">
+      <button id="btnBack" class="chip" type="button">↩ 입력 화면으로</button>
+    </div>
+    <div class="arena" id="arena">
+      <div class="hud">
+        <div class="hp-box L" id="hpL">
+          <div class="hp-name"><span class="dot"></span><span class="tico"></span><span class="who"></span></div>
+          <div class="hpbar"><div class="ghost"></div><div class="fill"></div></div>
+          <div class="hp-num"></div>
+        </div>
+        <div class="round-box"><div class="round" id="roundNum">준비</div><div class="ff" id="ff" hidden></div></div>
+        <div class="hp-box R" id="hpR">
+          <div class="hp-name"><span class="who"></span><span class="tico"></span><span class="dot"></span></div>
+          <div class="hpbar"><div class="ghost"></div><div class="fill"></div></div>
+          <div class="hp-num"></div>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div>
+        <div class="ground"></div>
+        <div class="slot L" id="slotL"></div>
+        <div class="slot R" id="slotR"></div>
+        <div class="flash" id="flash"></div>
+        <button class="skip" id="btnSkip" type="button" hidden>⏭ 건너뛰기</button>
+      </div>
+      <div class="ticker" id="ticker" aria-live="polite"></div>
+      <div class="scards" id="scards"><div class="scard" data-side="L"></div><div class="scard" data-side="R"></div></div>
+    </div>
+    <div class="result" id="result" hidden></div>
+  </section>
+</main>
+
+<div class="mstart"><button class="big-btn btn-start" type="button">⚔️ 대결 시작!</button></div>
+
+<footer>입력한 글자는 어디에도 저장되거나 전송되지 않아요. 모든 계산은 이 브라우저 안에서만 이루어져요.</footer>
+
+<!-- 해시 배움터 -->
+<div id="learn" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="learnTitle">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="learnTitle">📘 해시 배움터</h2><button class="x" id="learnClose" type="button" aria-label="닫기">✕</button></div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="modal-body" id="learnBody">
+
+<section class="pane" data-pane="intro">
+  <h2>🤔 해시(Hash)란?</h2>
+  <p><b>해시 함수</b>는 어떤 데이터를 넣든 <b>정해진 길이의 값</b>을 돌려주는 함수예요. 이렇게 나온 값을 <b>해시값</b> 또는 <b>다이제스트(digest, 요약)</b>라고 불러요. 영어 hash는 '잘게 다지다'라는 뜻이에요. 데이터를 잘게 다지고 마구 섞어서 짧은 값으로 만든다는 의미죠.</p>
+  <div class="box">🍹 <b>믹서기 비유</b><br>딸기와 바나나를 갈면 주스가 돼요. 같은 재료를 같은 만큼 넣으면 언제나 똑같은 주스가 나오지만, 주스만 보고 원래 과일을 되살릴 수는 없어요. 해시 함수도 이와 비슷해요.</div>
+  <div class="box blue">🖐️ <b>지문 비유</b><br>사람마다 지문이 다르듯 데이터마다 해시값이 (거의) 다 달라요. 그래서 커다란 파일 두 개를 처음부터 끝까지 비교하지 않고 해시값만 비교해도 같은지 다른지 빠르게 알 수 있어요.</div>
+  <h3>MD5 결과를 직접 보자</h3>
+  <div class="calc-wrap"><table class="t" id="introTable"></table></div>
+  <p>입력이 한 글자든, 아무것도 없든, 아주 긴 문장이든 결과는 언제나 <b>16진수 32자리</b>(= 128비트)예요.</p>
+  <h3>MD5는 누가 만들었을까?</h3>
+  <p>MD5(Message-Digest Algorithm 5)는 1991년 MIT의 암호학자 <b>로널드 라이베스트(Ronald Rivest)</b>가 설계했고, 1992년 인터넷 표준 문서 <b>RFC 1321</b>로 공개되었어요. 라이베스트는 유명한 공개키 암호 RSA의 'R'이기도 해요. 앞서 만든 MD4를 더 튼튼하게 고친 것이 MD5예요.</p>
+  <h3>이 게임은 해시를 어떻게 쓸까?</h3>
+  <p>입력한 문자열 → <b>UTF-8 바이트</b>로 바꾸기 → <b>MD5</b> 계산 → 32자리를 <b>4자리씩 8조각</b> → 조각마다 체력·공격력 같은 능력치가 돼요. 자세한 내용은 <button class="link" type="button" data-open="game">🎮 게임 속 해시</button>에서 볼 수 있어요.</p>
+</section>
+
+<section class="pane" data-pane="hex">
+  <h2>🔢 16진수 읽는 법</h2>
+  <p>우리가 평소에 쓰는 <b>10진수</b>는 0~9 열 개의 숫자를 써요. <b>16진수</b>는 0~9에 <b>a, b, c, d, e, f</b>를 더해 열여섯 개의 기호를 써요.</p>
+  <div class="hexgrid" id="hexGrid"></div>
+  <p>16진수 한 자리는 0~15를 나타내는데, 이것은 2진수 4자리(<b>4비트</b>)와 딱 맞아요. 예: <code>f</code> = 15 = <code>1111</code>₂. 그래서 MD5의 32자리 = 32 × 4 = <b>128비트</b>예요.</p>
+  <h3>자리값 계산</h3>
+  <p>10진수가 1, 10, 100, 1000의 자리를 쓰듯 16진수는 <b>1, 16, 256, 4096</b>의 자리를 써요. (16⁰, 16¹, 16², 16³)</p>
+  <div class="box green">
+    <label style="font-family:var(--f-title)">16진수 4자리를 입력해 보세요:
+      <input id="hexIn" class="lab-in mono" maxlength="4" value="5d41" style="width:7em;display:inline-block;margin-left:6px" autocomplete="off" spellcheck="false"></label>
+    <div id="hexOut" style="margin-top:10px"></div>
+  </div>
+  <p>4자리로 만들 수 있는 가장 큰 수는 <code>ffff</code> = 15×4096 + 15×256 + 15×16 + 15 = <b>65535</b>예요. 그래서 이 게임의 조각 하나는 <b>0~65535</b> 사이의 값이 돼요.</p>
+  <h3>MD5로 나올 수 있는 값은 모두 몇 가지?</h3>
+  <p>32자리 각각에 16가지 기호가 올 수 있으니 16<sup>32</sup> = 2<sup>128</sup>가지예요.</p>
+  <div class="formula">2^128 = 340,282,366,920,938,463,463,374,607,431,768,211,456
+      ≈ 3.4 × 10^38  (약 340간)</div>
+  <p>지구의 모든 해변 모래알은 약 10<sup>18</sup>~10<sup>19</sup>개로 추정되니, 그보다도 10<sup>19</sup>배 이상 많은 수예요!</p>
+</section>
+
+<section class="pane" data-pane="props">
+  <h2>🧬 좋은 해시 함수의 성질</h2>
+  <div class="cards">
+    <div class="card"><h4>🎯 결정성</h4><p>같은 입력은 언제, 어디서, 몇 번을 계산해도 <b>항상 같은 출력</b>이 나와요. 이 게임에서 같은 이름이 언제나 같은 캐릭터가 되는 이유예요.</p></div>
+    <div class="card"><h4>📏 고정 길이</h4><p>입력 길이와 상관없이 출력 길이가 같아요. MD5는 언제나 128비트(16진수 32자리)예요.</p></div>
+    <div class="card"><h4>🌊 눈사태 효과</h4><p>입력이 아주 조금만 달라져도 출력 비트의 <b>약 절반</b>이 바뀌어요. 그래서 비슷한 이름이라도 능력치는 전혀 비슷하지 않아요.</p></div>
+    <div class="card"><h4>🚪 일방향성</h4><p>해시값만 보고 원래 입력을 알아내는 것은 사실상 불가능해야 해요. 이를 <b>역상 저항성</b>이라고 해요.</p></div>
+    <div class="card"><h4>🧩 충돌 저항성</h4><p>해시값이 같은 서로 다른 두 입력을 찾기가 매우 어려워야 해요. ⚠️ MD5는 이 성질이 <b>깨졌어요!</b></p></div>
+    <div class="card"><h4>⚡ 빠른 계산</h4><p>큰 파일도 금방 계산할 수 있어야 해요. 다만 비밀번호 저장에서는 빠른 것이 오히려 약점이 돼요.</p></div>
+  </div>
+  <h3>🌊 눈사태 효과 예시</h3>
+  <div class="box blue" id="avalancheEx"></div>
+  <p><button class="link" type="button" data-open="lab">🔬 실험실</button>에서 직접 바꿔 보세요.</p>
+  <h3>🐦 충돌은 반드시 존재해요: 비둘기집 원리</h3>
+  <p>비둘기 10마리가 비둘기집 9칸에 들어가면 적어도 한 칸에는 두 마리 이상이 들어가요. 해시 함수의 입력은 끝없이 많지만 출력은 2<sup>128</sup>가지뿐이니, <b>해시값이 같은 서로 다른 입력(충돌)</b>은 반드시 존재해요. 그래서 좋은 해시 함수는 충돌이 <i>없는</i> 함수가 아니라, 충돌을 <b>찾기가 너무 어려운</b> 함수예요.</p>
+  <h3>세 가지 저항성 정리</h3>
+  <div class="calc-wrap"><table class="t">
+    <tr><th>성질</th><th>의미</th><th>무작정 시도하면</th><th>MD5의 현재 상태</th></tr>
+    <tr><td class="n"><b>역상 저항성</b></td><td>해시값 h만 보고 md5(x) = h인 x 찾기</td><td class="n">약 2<sup>128</sup>번</td><td>✅ 실용적인 공격 없음 (이론상 2<sup>123.4</sup>)</td></tr>
+    <tr><td class="n"><b>제2역상 저항성</b></td><td>x가 주어졌을 때 md5(y) = md5(x)인 <i>다른</i> y 찾기</td><td class="n">약 2<sup>128</sup>번</td><td>✅ 실용적인 공격 없음</td></tr>
+    <tr><td class="n"><b>충돌 저항성</b></td><td>md5(x) = md5(y)인 <i>아무</i> 쌍 x ≠ y 찾기</td><td class="n">약 2<sup>64</sup>번 (생일 역설)</td><td>❌ 깨짐: 일반 PC로 몇 초</td></tr>
+  </table></div>
+  <p class="hint">충돌 찾기가 2<sup>64</sup>번밖에 안 되는 이유는 <button class="link" type="button" data-open="deep">🧠 심화 → 생일 역설</button>에서 확인하세요.</p>
+</section>
+
+<section class="pane" data-pane="lab">
+  <h2>🔬 해시 실험실</h2>
+  <p>두 문자열을 넣고 해시값이 얼마나 다른지 비교해 보세요. 대소문자, 띄어쓰기, 마침표 하나만 바꿔도 결과가 완전히 달라져요.</p>
+  <div class="lab-grid">
+    <label>입력 A <input id="labA" class="lab-in" value="apple" autocomplete="off" spellcheck="false"></label>
+    <label>입력 B <input id="labB" class="lab-in" value="Apple" autocomplete="off" spellcheck="false"></label>
+  </div>
+  <div class="qbtns" id="labQuick"></div>
+  <div class="box blue">
+    <div>A: <span class="diffhash" id="labHA"></span></div>
+    <div>B: <span class="diffhash" id="labHB"></span></div>
+    <p id="labSummary" style="margin:8px 0 0"></p>
+    <div class="bitgrid" id="labBits"></div>
+    <div class="hint">분홍 칸 = 128비트 중 서로 다른 비트. 해시가 잘 섞는다면 평균적으로 약 64비트(50%)가 달라요.</div>
+  </div>
+  <h3>🧱 컴퓨터가 실제로 해시하는 것: UTF-8 바이트 (입력 A)</h3>
+  <p>MD5는 글자가 아니라 <b>바이트(8비트 숫자)</b>를 계산해요. 글자는 <b>UTF-8</b> 방식으로 바이트로 바뀌는데, 영어·숫자·기호는 1바이트, 한글은 3바이트, 이모지는 보통 4바이트예요. (␣ = 공백)</p>
+  <div id="labBytes"></div>
+  <h3>📦 패딩: 64바이트 블록 맞추기 (입력 A)</h3>
+  <p>MD5는 데이터를 <b>512비트(64바이트) 블록</b> 단위로 처리해요. 길이를 딱 맞추기 위해 뒤에 내용을 덧붙이는데, 이것을 <b>패딩(padding)</b>이라고 해요.</p>
+  <div class="pad-legend">
+    <span><i style="background:#ffd9e8"></i>원래 메시지</span>
+    <span><i style="background:#ff6fa5"></i>80 = 끝 표시(비트 1 다음 0 일곱 개)</span>
+    <span><i style="background:#efebf2"></i>00 채우기</span>
+    <span><i style="background:#cfd7ff"></i>원래 길이(비트 수, 8바이트)</span>
+  </div>
+  <div id="labPad"></div>
+</section>
+
+<section class="pane" data-pane="game">
+  <h2>🎮 게임 속 해시</h2>
+  <h3>1단계: 해시값을 8조각으로</h3>
+  <p>MD5 32자리를 앞에서부터 4자리씩 끊으면 8조각이 돼요. 각 조각은 0~65535 사이의 수예요.</p>
+  <div class="calc-wrap"><table class="t" id="gameStatTable"></table></div>
+  <h3>2단계: 조각을 능력치로 바꾸기</h3>
+  <div class="formula">능력치 = 최솟값 + ⌊ 조각값 × (최댓값 − 최솟값 + 1) ÷ 65536 ⌋</div>
+  <p>조각값을 0 이상 1 미만의 비율(조각값 ÷ 65536)로 바꾼 뒤 능력치 범위만큼 늘리는 <b>비례 변환</b>이에요. ⌊ ⌋는 소수점 아래를 버린다는 뜻이에요.</p>
+  <div class="box" id="gameExample"></div>
+  <p>속성만은 <b>나머지 연산</b>을 써요. <code>조각값 mod 3</code>이 0이면 🔥불, 1이면 💧물, 2이면 🌿풀이에요. (mod = 나눈 나머지)</p>
+  <h3>3단계: 장비 정하기</h3>
+  <p>공격력과 방어력 범위를 5등급으로 나눠 무기와 방어구를 정해요.</p>
+  <div class="calc-wrap"><table class="t" id="equipTable"></table></div>
+  <h3>⚔️ 전투 규칙</h3>
+  <ul>
+    <li><b>1합</b> = 두 캐릭터가 한 번씩 공격하는 것</li>
+    <li><b>선공</b>: 속도가 높은 쪽이 먼저 공격해요. 속도가 같으면 <b>왼쪽</b>이 먼저예요.</li>
+    <li><b>회피</b>: 난수 &lt; 상대의 회피율이면 MISS!</li>
+    <li><b>기본 데미지</b> = 공격력 × 100 ÷ (100 + 상대 방어력)</li>
+    <li><b>난수 보정</b>: × 0.90 ~ 1.10</li>
+    <li><b>필살기</b>: 난수 &lt; 행운 ÷ 500 이면 × 2 (행운 99 → 약 19.8%)</li>
+    <li><b>치명타</b>: 난수 &lt; 치명타율이면 × 1.5 (필살기와 겹치면 × 3!)</li>
+    <li><b>상성</b>: 🔥불 → 🌿풀 → 💧물 → 🔥불 (화살표 방향으로 유리). 유리 × 1.2, 불리 × 0.8</li>
+    <li>최종 데미지는 반올림하고, 최소 1이에요.</li>
+    <li>체력이 0이 되면 <b>KO</b>! 50합이 지나도 끝나지 않으면 <b>남은 체력 비율</b>이 높은 쪽이 판정승이에요. (같으면 무승부)</li>
+  </ul>
+  <div class="formula">데미지 = 반올림( 공격력 × 100 ÷ (100 + 방어력) × 난수보정 × 필살기 × 치명타 × 상성 )</div>
+  <h3>🎲 '무작위'인데 왜 결과가 항상 같을까? 시드와 의사난수</h3>
+  <p>컴퓨터는 진짜 무작위를 만들기 어려워서, 수식으로 무작위처럼 보이는 수를 만들어요. 이것을 <b>의사난수(pseudo-random number)</b>라고 하고, 처음에 넣어 주는 값을 <b>시드(seed, 씨앗값)</b>라고 해요. 시드가 같으면 나오는 수열도 언제나 같아요.</p>
+  <div class="formula">시드 = MD5( 두 해시 중 작은 것 + 큰 것 )   ← 이어 붙여서 한 번 더 해시!
+난수 생성기 = sfc32  (시드 32자리를 8자리씩 4조각으로 나눠 넣고, 12번 미리 돌려 섞음)</div>
+  <p>두 해시를 크기 순서로 정렬해 이어 붙이므로 좌우를 바꿔도 시드가 같아요. 그래서 같은 두 문자열의 대결은 어느 컴퓨터에서 몇 번을 해도 결과가 같아요. 이렇게 같은 입력에 항상 같은 결과가 나오는 성질을 <b>결정론적(deterministic)</b>이라고 해요. (단, 두 캐릭터의 속도가 같을 때는 왼쪽이 먼저 공격하므로 좌우를 바꾸면 결과가 달라질 수 있어요.)</p>
+  <p>공격 한 번마다 난수를 4개씩 <b>회피 → 난수보정 → 필살기 → 치명타</b> 순서로 뽑아요. 대결이 끝난 뒤 <b>📜 전체 전투 기록</b>에서 모든 계산을 확인할 수 있어요.</p>
+</section>
+
+<section class="pane" data-pane="use">
+  <h2>🌍 해시는 어디에 쓰일까?</h2>
+  <div class="cards">
+    <div class="card"><h4>📥 파일 무결성 확인</h4><p>프로그램 배포 사이트가 공개한 해시값과 내가 내려받은 파일의 해시값을 비교해요. 같으면 파일이 손상되거나 바뀌지 않았다는 뜻이에요.</p></div>
+    <div class="card"><h4>🔑 비밀번호 저장</h4><p>서버는 비밀번호 자체가 아니라 해시값을 저장해요. 로그인할 때 입력한 비밀번호를 해시해서 저장된 값과 비교하죠. (단, MD5로는 안 돼요! → 🔐 탭)</p></div>
+    <div class="card"><h4>🗂️ 중복 파일 찾기</h4><p>클라우드 저장소나 사진 정리 앱은 해시값으로 똑같은 파일을 찾아서 한 번만 저장해요.</p></div>
+    <div class="card"><h4>🌳 Git 버전 관리</h4><p>코드를 저장(커밋)할 때마다 그 내용의 해시값을 이름표로 붙여요. 원래 SHA-1을 썼고 SHA-256으로 옮겨 가는 중이에요.</p></div>
+    <div class="card"><h4>⛓️ 블록체인</h4><p>각 블록이 이전 블록의 해시값을 담고 있어 사슬처럼 연결돼요. 중간 블록 하나를 고치면 그 뒤의 해시가 모두 달라져서 바로 들통나요. 비트코인은 SHA-256을 써요.</p></div>
+    <div class="card"><h4>✍️ 전자서명</h4><p>긴 문서 전체 대신 문서의 해시값에 서명해요. 문서가 한 글자라도 바뀌면 해시가 달라져 서명이 맞지 않게 돼요.</p></div>
+    <div class="card"><h4>📚 해시 테이블</h4><p>이름 같은 키를 해시해서 저장 위치를 바로 계산하는 자료구조예요. 사전에서 단어를 순식간에 찾을 수 있게 해 줘요. (여기에는 보통 더 빠르고 간단한 해시 함수를 써요.)</p></div>
+    <div class="card"><h4>🎮 이 게임처럼!</h4><p>입력에서 골고루 퍼진 값을 뽑아내는 데도 써요. 프로필 기본 이미지(아이덴티콘), 게임 맵 자동 생성 같은 곳이에요.</p></div>
+  </div>
+</section>
+
+<section class="pane" data-pane="security">
+  <h2>🔐 MD5와 보안</h2>
+  <div class="box pink">⚠️ <b>결론부터:</b> MD5는 이제 <b>보안 목적으로 쓰면 안 돼요.</b> 이 게임이나 실수로 생긴 파일 손상 확인처럼 보안과 상관없는 곳에서만 써요.</div>
+  <h3>📅 MD5가 무너진 역사</h3>
+  <ul class="timeline">
+    <li><b>1991–1992</b> 로널드 라이베스트가 MD5를 설계하고 RFC 1321로 공개</li>
+    <li><b>1996</b> 한스 도베르틴이 MD5 내부 압축 함수의 충돌을 발견해요. 전문가들이 다른 해시로 바꾸라고 권하기 시작했어요.</li>
+    <li><b>2004</b> 중국의 왕샤오윈(王小云) 연구팀이 실제 MD5 충돌 쌍을 발표해 전 세계 암호학계를 놀라게 했어요.</li>
+    <li><b>2007</b> 서로 다른 앞부분(접두사)을 가진 두 파일도 충돌하게 만드는 '선택 접두 충돌' 공격이 발표됐어요.</li>
+    <li><b>2008</b> 연구자들이 MD5 충돌로 인터넷 보안 인증 기관(CA)의 가짜 인증서를 만드는 데 성공했어요.</li>
+    <li><b>2012</b> 악성코드 '플레임(Flame)'이 MD5 충돌로 마이크로소프트의 코드 서명을 위조했어요.</li>
+    <li><b>지금</b> 일반 노트북으로도 <b>몇 초 만에</b> MD5 충돌을 만들 수 있어요.</li>
+  </ul>
+  <h3>🔑 비밀번호를 MD5로 저장하면 안 되는 이유</h3>
+  <div class="cards">
+    <div class="card"><h4>🏎️ 너무 빨라요</h4><p>MD5는 빠르게 계산하도록 설계됐어요. 최신 그래픽카드 한 장으로 1초에 <b>수백억 개</b>가 넘는 비밀번호 후보를 해시해 볼 수 있어서, 짧은 비밀번호는 금방 찾아내요.</p></div>
+    <div class="card"><h4>📖 레인보우 테이블</h4><p>흔한 비밀번호들의 해시값을 미리 계산해 둔 거대한 표예요. 예를 들어 <code class="mono" data-md5="123456"></code>는 인터넷에 검색만 해도 '123456'인 것이 바로 나와요.</p></div>
+    <div class="card"><h4>🧂 해결책 ① 솔트</h4><p>사용자마다 다른 무작위 문자열(솔트)을 비밀번호에 붙여서 해시해요. 같은 비밀번호도 해시값이 달라져서 미리 만든 표가 쓸모없어져요.</p></div>
+    <div class="card"><h4>🐢 해결책 ② 일부러 느린 해시</h4><p>bcrypt, scrypt, <b>Argon2</b>처럼 일부러 시간과 메모리를 많이 쓰도록 만든 비밀번호 전용 해시를 써요. 한 번은 금방이지만, 수십억 번 시도하기는 어렵게 만드는 거예요.</p></div>
+  </div>
+  <h3>✅ 지금 쓰이는 해시 함수들</h3>
+  <div class="calc-wrap"><table class="t">
+    <tr><th>이름</th><th>출력 길이</th><th>상태와 쓰임</th></tr>
+    <tr><td class="n">MD5</td><td class="n">128비트</td><td>❌ 충돌 공격 가능 → 보안용 사용 금지</td></tr>
+    <tr><td class="n">SHA-1</td><td class="n">160비트</td><td>❌ 2017년 구글과 CWI 연구소가 실제 충돌(SHAttered)을 공개 → 사용 중단 중</td></tr>
+    <tr><td class="n">SHA-256 (SHA-2)</td><td class="n">256비트</td><td>✅ HTTPS 인증서, 소프트웨어 서명, 비트코인 등 가장 널리 쓰여요</td></tr>
+    <tr><td class="n">SHA-3</td><td class="n">224~512비트</td><td>✅ 2015년 표준. SHA-2와 완전히 다른 '스펀지' 구조</td></tr>
+    <tr><td class="n">BLAKE2 / BLAKE3</td><td class="n">256비트 등</td><td>✅ 매우 빠르고 안전해요</td></tr>
+    <tr><td class="n">Argon2</td><td class="n">설정 가능</td><td>✅ 비밀번호 저장 전용 (2015년 비밀번호 해싱 대회 우승)</td></tr>
+  </table></div>
+  <div class="box blue">
+    <label style="font-family:var(--f-title)">MD5와 SHA-256 비교해 보기 <input id="shaIn" class="lab-in" value="hello" autocomplete="off" spellcheck="false"></label>
+    <div style="margin-top:8px"><b>MD5</b> (128비트 = 32자리)<br><span class="diffhash" id="shaMd5"></span></div>
+    <div style="margin-top:6px"><b>SHA-256</b> (256비트 = 64자리)<br><span class="diffhash" id="shaOut"></span></div>
+  </div>
+</section>
+
+<section class="pane" data-pane="deep">
+  <h2>🧠 심화: 더 깊이 알아보기</h2>
+  <details class="deep" open>
+    <summary>⚙️ MD5 내부는 어떻게 돌아갈까?</summary>
+    <div>
+      <ol>
+        <li><b>바이트로 바꾸기</b>: 문자열을 UTF-8 바이트로 바꿔요.</li>
+        <li><b>패딩</b>: 끝에 비트 '1' 하나(바이트로는 <code>80</code>)를 붙이고, 전체 길이를 512로 나눈 나머지가 448비트가 될 때까지 0을 채워요. 마지막 64비트(8바이트)에는 원래 길이(비트 수)를 <b>리틀 엔디언</b>(작은 자리 바이트가 먼저)으로 적어요. → <button class="link" type="button" data-open="lab">실험실에서 보기</button></li>
+        <li><b>블록 나누기</b>: 512비트 블록마다 32비트 단어 16개 M[0]~M[15]로 쪼개요.</li>
+        <li><b>초깃값</b>: 32비트 변수 4개로 시작해요.
+          <div class="formula">A = 67452301   B = efcdab89   C = 98badcfe   D = 10325476</div></li>
+        <li><b>64단계 섞기</b>: 블록마다 16단계씩 4라운드, 모두 64단계를 거쳐요. 라운드마다 다른 비트 함수를 써요.
+          <div class="formula">1라운드  F(B,C,D) = (B ∧ C) ∨ (¬B ∧ D)
+2라운드  G(B,C,D) = (B ∧ D) ∨ (C ∧ ¬D)
+3라운드  H(B,C,D) = B ⊕ C ⊕ D
+4라운드  I(B,C,D) = C ⊕ (B ∨ ¬D)
+
+한 단계:  B ← B + ((A + f(B,C,D) + K[i] + M[g]) <<< s[i])
+          A ← D,  D ← C,  C ← (원래의) B
+
+∧ AND   ∨ OR   ¬ NOT   ⊕ XOR   <<< 왼쪽으로 비트 회전   + 는 2^32로 나눈 나머지 덧셈</div></li>
+        <li><b>누적</b>: 블록 하나가 끝나면 결과를 A, B, C, D에 더하고 다음 블록으로 넘어가요.</li>
+        <li><b>출력</b>: 마지막 A‖B‖C‖D를 리틀 엔디언 바이트 순서로 이어 붙이면 128비트 해시값이 돼요.</li>
+      </ol>
+      <p><b>상수 K[i]</b> = ⌊ |sin(i+1)| × 2<sup>32</sup> ⌋. 사인값을 쓰는 이유는 설계자가 몰래 고른 수가 아니라는 것을 누구나 확인할 수 있게 하려는 거예요. 이런 상수를 'nothing-up-my-sleeve number(소매 속에 아무것도 없는 수)'라고 불러요.</p>
+      <div class="formula" id="kValues"></div>
+    </div>
+  </details>
+  <details class="deep">
+    <summary>🎂 생일 역설과 충돌 확률</summary>
+    <div>
+      <p>한 반에 몇 명이 있으면 생일이 같은 두 사람이 있을 확률이 50%를 넘을까요? 정답은 겨우 <b>23명</b>이에요! 사람이 늘수록 비교할 '쌍'의 수는 n(n−1)/2로 빠르게 늘어나기 때문이에요.</p>
+      <div class="box green">
+        <label style="font-family:var(--f-title)">사람 수: <input id="bdIn" class="num-in" type="number" min="1" max="366" value="23"></label>
+        <span id="bdOut" style="margin-left:8px"></span>
+      </div>
+      <p>해시도 똑같아요. 출력이 N가지일 때 약 √N번만 시도해도 충돌이 생길 확률이 꽤 높아져요. MD5는 N = 2<sup>128</sup>이니 √N = 2<sup>64</sup> ≈ 1.8 × 10<sup>19</sup>번이에요.</p>
+      <div class="calc-wrap"><table class="t" id="collTable"></table></div>
+      <p class="hint">근사식: 충돌 확률 ≈ 1 − e<sup>−k(k−1) / (2N)</sup>, k = 해시한 개수</p>
+      <p>2<sup>64</sup>번도 엄청나게 많지만, 실제 MD5 공격은 내부 구조의 수학적 약점을 이용해 이보다 훨씬 빠르게(몇 초 만에) 충돌을 찾아요.</p>
+    </div>
+  </details>
+  <details class="deep">
+    <summary>🔗 머클–담고르 구조와 길이 확장 공격</summary>
+    <div>
+      <p>MD5는 블록을 하나씩 처리하면서 중간 결과(A, B, C, D)를 다음 블록으로 넘겨요. 이런 방식을 <b>머클–담고르(Merkle–Damgård) 구조</b>라고 하고, SHA-1과 SHA-256도 같은 구조예요.</p>
+      <p>그런데 해시값이 곧 '마지막 중간 상태'이기 때문에, <code>md5(비밀 + 메시지)</code>의 값과 길이만 알면 비밀을 몰라도 <code>md5(비밀 + 메시지 + 패딩 + 덧붙인 내용)</code>을 계산할 수 있어요. 이것을 <b>길이 확장 공격</b>이라고 해요. 그래서 메시지 인증에는 <b>HMAC</b>이라는 방식을 따로 써요. SHA-3은 스펀지 구조라 이 공격이 통하지 않아요.</p>
+    </div>
+  </details>
+  <details class="deep">
+    <summary>🌈 레인보우 테이블은 어떻게 만들까?</summary>
+    <div>
+      <p>모든 비밀번호의 해시값을 다 저장하면 표가 너무 커져요. 레인보우 테이블은 <b>비밀번호 → 해시 → 환원 함수 → 새 비밀번호 후보 → 해시 → …</b>로 이어지는 긴 사슬을 만들고, 사슬의 <b>처음과 끝만</b> 저장해요. 찾을 때는 사슬을 다시 따라가며 계산하죠. 저장 공간을 줄이는 대신 계산 시간을 조금 더 쓰는 '시간–공간 맞바꾸기' 기법이에요.</p>
+      <p>솔트를 쓰면 솔트마다 새 표가 필요해지기 때문에 레인보우 테이블은 사실상 쓸모가 없어져요.</p>
+    </div>
+  </details>
+  <details class="deep">
+    <summary>🎲 이 게임의 의사난수 생성기 sfc32</summary>
+    <div>
+      <div class="formula">function sfc32(a, b, c, d) {
+  return () =&gt; {
+    t = a + b + d;      d = d + 1;        // 카운터
+    a = b ^ (b &gt;&gt;&gt; 9);  b = c + (c &lt;&lt; 3);
+    c = (c &lt;&lt;&lt; 21) + t;                   // 회전 후 더하기
+    return t ÷ 2^32;                      // 0 이상 1 미만
+  };
+}</div>
+      <p>32비트 덧셈, 시프트, 회전만으로 만든 빠르고 품질 좋은 의사난수 생성기예요. 하지만 <b>암호용은 아니에요.</b> 암호처럼 예측되면 안 되는 곳에는 <code>crypto.getRandomValues()</code> 같은 <b>암호학적으로 안전한 난수 생성기(CSPRNG)</b>를 써야 해요.</p>
+    </div>
+  </details>
+</section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* =====================================================
+   MD5 (RFC 1321) — UTF-8 바이트 기준
+   ===================================================== */
+const MD5_K = new Uint32Array(64).map((_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296));
+const MD5_S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22, 5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+               4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23, 6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+function md5Bytes(msg) {
+  const len = msg.length;
+  const total = (((len + 8) >>> 6) + 1) * 64;
+  const buf = new Uint8Array(total);
+  buf.set(msg);
+  buf[len] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(total - 8, (len * 8) >>> 0, true);
+  dv.setUint32(total - 4, Math.floor(len / 0x20000000), true);
+  let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+  const M = new Uint32Array(16);
+  for (let off = 0; off < total; off += 64) {
+    for (let j = 0; j < 16; j++) M[j] = dv.getUint32(off + j * 4, true);
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let i = 0; i < 64; i++) {
+      let F, g;
+      if (i < 16)      { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) & 15; }
+      else if (i < 48) { F = B ^ C ^ D;          g = (3 * i + 5) & 15; }
+      else             { F = C ^ (B | ~D);       g = (7 * i) & 15; }
+      F = (F + A + MD5_K[i] + M[g]) >>> 0;
+      A = D; D = C; C = B;
+      B = (B + ((F << MD5_S[i]) | (F >>> (32 - MD5_S[i])))) >>> 0;
+    }
+    a0 = (a0 + A) >>> 0; b0 = (b0 + B) >>> 0; c0 = (c0 + C) >>> 0; d0 = (d0 + D) >>> 0;
+  }
+  let hex = '';
+  for (const w of [a0, b0, c0, d0])
+    for (let i = 0; i < 4; i++) hex += ((w >>> (i * 8)) & 255).toString(16).padStart(2, '0');
+  return hex;
+}
+const enc = new TextEncoder();
+const md5 = s => md5Bytes(enc.encode(s));
+
+/* =====================================================
+   게임 데이터
+   ===================================================== */
+const STATS = [
+  { key: 'hp',   name: '체력',   icon: '❤️', min: 300, max: 999, color: '#ff6b8b', desc: '0이 되면 쓰러져요' },
+  { key: 'atk',  name: '공격력', icon: '⚔️', min: 30,  max: 99,  color: '#ff9f43', desc: '기본 데미지를 정해요' },
+  { key: 'def',  name: '방어력', icon: '🛡️', min: 10,  max: 79,  color: '#8e7dff', desc: '받는 데미지를 줄여요' },
+  { key: 'spd',  name: '속도',   icon: '💨', min: 1,   max: 99,  color: '#22b8a7', desc: '높은 쪽이 먼저 공격해요' },
+  { key: 'crit', name: '치명타', icon: '🎯', min: 0,   max: 30,  color: '#f5b700', unit: '%', desc: '터지면 데미지 1.5배' },
+  { key: 'eva',  name: '회피',   icon: '🌀', min: 0,   max: 25,  color: '#4ea8ff', unit: '%', desc: '상대 공격을 피해요' },
+  { key: 'luck', name: '행운',   icon: '🍀', min: 0,   max: 99,  color: '#3cc46b', desc: '필살기(2배) 확률 = 행운 ÷ 5 %' },
+  { key: 'type', name: '속성',   icon: '🔮', color: '#b86bff', desc: '조각값 mod 3 → 불·물·풀' }
+];
+const TYPES = [
+  { name: '불', icon: '🔥', color: '#ff8a5c', dark: '#c94f1f' },
+  { name: '물', icon: '💧', color: '#4ea8ff', dark: '#1f6fc4' },
+  { name: '풀', icon: '🌿', color: '#3cc46b', dark: '#1f8a45' }
+];
+const WEAPONS = [
+  { e: '🥄', n: '숟가락' }, { e: '🍳', n: '프라이팬' }, { e: '🔨', n: '뿅망치' }, { e: '🗡️', n: '검' }, { e: '⚔️', n: '쌍검' }
+];
+const ARMORS = [
+  { head: '🧢', shield: '',   big: false, n: '야구모자' },
+  { head: '⛑️', shield: '',   big: false, n: '안전모' },
+  { head: '⛑️', shield: '🛡️', big: false, n: '안전모+방패' },
+  { head: '⛑️', shield: '🛡️', big: true,  n: '안전모+큰 방패' },
+  { head: '👑', shield: '🛡️', big: true,  n: '전설의 왕관+큰 방패' }
+];
+const FACES = { normal: '• ᴗ •', attack: 'ò ᴗ ó', hurt: '> ﹏ <', dodge: '• ε •', ko: '× _ ×', win: '^ ▽ ^' };
+const MAX_ROUNDS = 50;
+const PLACE = [4096, 256, 16, 1];
+
+// 불(0) > 풀(2) > 물(1) > 불(0)
+function typeMult(a, d) {
+  if (a === d) return 1;
+  return (a === 0 && d === 2) || (a === 2 && d === 1) || (a === 1 && d === 0) ? 1.2 : 0.8;
+}
+const tierOf = (v, min, max) => Math.min(4, Math.floor((v - min) * 5 / (max - min + 1)));
+const tierRange = (t, min, max) => {
+  const size = (max - min + 1) / 5;
+  return `${min + Math.ceil(t * size)}~${min + Math.ceil((t + 1) * size) - 1}`;
+};
+
+/* =====================================================
+   도우미
+   ===================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const opp = s => (s === 'L' ? 'R' : 'L');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const segmenter = window.Intl && Intl.Segmenter ? new Intl.Segmenter('ko', { granularity: 'grapheme' }) : null;
+const graphemes = s => (segmenter ? Array.from(segmenter.segment(s), x => x.segment) : Array.from(s));
+
+function labelName(s) {
+  if (s === '') return '(빈 문자열)';
+  const g = graphemes(s);
+  if (s.trim() === '') return `(공백 ${g.length}개)`;
+  return g.length > 5 ? g.slice(0, 5).join('') + '…' : s;
+}
+function bodyText(s) {
+  const g = graphemes(s);
+  return {
+    text: g.length > 5 ? g.slice(0, 5).join('') + '…' : s,
+    scale: [0.3, 0.36, 0.3, 0.25, 0.21, 0.18, 0.16][Math.min(g.length, 6)]
+  };
+}
+const hexBreakdown = h => h.split('').map((d, j) => `${parseInt(d, 16)}×${PLACE[j]}`).join(' + ');
+
+/* =====================================================
+   캐릭터 만들기
+   ===================================================== */
+function makeChar(str) {
+  const hash = md5(str);
+  const raw = Array.from({ length: 8 }, (_, i) => parseInt(hash.slice(i * 4, i * 4 + 4), 16));
+  const c = { str, hash, raw };
+  STATS.forEach((s, i) => {
+    c[s.key] = s.key === 'type' ? raw[i] % 3 : s.min + Math.floor(raw[i] * (s.max - s.min + 1) / 65536);
+  });
+  c.wt = tierOf(c.atk, 30, 99);
+  c.at = tierOf(c.def, 10, 79);
+  return c;
+}
+
+// bare = 장비·속성이 아직 공개되지 않은 맨몸 상태
+function fighterEl(c, side, bare = false) {
+  const el = document.createElement('div');
+  el.className = `fighter side-${side} type-${bare ? 'x' : c.type}`;
+  const W = WEAPONS[c.wt], A = ARMORS[c.at], T = TYPES[c.type];
+  const hid = bare ? ' hid' : '';
+  el.innerHTML = `
+    <div class="f-move"><div class="f-bob">
+      <div class="f-head${hid}">${A.head}</div>
+      <div class="f-body">
+        <div class="f-text"></div>
+        <div class="f-face"><span class="blush"></span><span class="f-mouth">${FACES.normal}</span><span class="blush"></span></div>
+        <div class="f-feet"><i></i><i></i></div>
+      </div>
+      <div class="f-weapon${hid}"><span>${W.e}</span></div>
+      ${A.shield ? `<div class="f-shield${A.big ? ' big' : ''}${hid}">${A.shield}</div>` : ''}
+    </div></div>
+    <div class="f-tag">${bare ? '❓ ???' : `${T.icon} ${T.name}`}</div>`;
+  const t = $('.f-text', el);
+  const bt = bodyText(c.str);
+  t.textContent = bt.text;
+  t.style.setProperty('--tscale', bt.scale);
+  return {
+    el, move: $('.f-move', el), body: $('.f-body', el), mouth: $('.f-mouth', el), tag: $('.f-tag', el),
+    head: $('.f-head', el), weapon: $('.f-weapon', el), shield: $('.f-shield', el)
+  };
+}
+
+/* =====================================================
+   의사난수 & 전투 시뮬레이션 (결정론적)
+   ===================================================== */
+function sfc32(a, b, c, d) {
+  return function () {
+    a |= 0; b |= 0; c |= 0; d |= 0;
+    const t = (((a + b) | 0) + d) | 0;
+    d = (d + 1) | 0;
+    a = b ^ (b >>> 9);
+    b = (c + (c << 3)) | 0;
+    c = (c << 21) | (c >>> 11);
+    c = (c + t) | 0;
+    return (t >>> 0) / 4294967296;
+  };
+}
+function rngFromHex(h) {
+  const r = sfc32(...[0, 1, 2, 3].map(i => parseInt(h.slice(i * 8, i * 8 + 8), 16)));
+  for (let i = 0; i < 12; i++) r();
+  return r;
+}
+
+function simulate(L, R) {
+  const [lo, hi] = L.hash <= R.hash ? [L.hash, R.hash] : [R.hash, L.hash];
+  const seed = md5(lo + hi);
+  const rnd = rngFromHex(seed);
+  const chars = { L, R };
+  const hp = { L: L.hp, R: R.hp };
+  const tie = L.spd === R.spd;
+  const first = L.spd >= R.spd ? 'L' : 'R';
+  const order = [first, opp(first)];
+  const rounds = [];
+  let winner = null, count = 0;
+  for (let n = 1; n <= MAX_ROUNDS && !winner; n++) {
+    const round = { n, attacks: [] };
+    for (const s of order) {
+      const t = opp(s), A = chars[s], D = chars[t];
+      const a = { n, side: s, target: t, rEva: rnd(), rVar: rnd(), rSp: rnd(), rCr: rnd() };
+      a.miss = a.rEva < D.eva / 100;
+      a.base = A.atk * 100 / (100 + D.def);
+      a.variance = 0.9 + a.rVar * 0.2;
+      a.special = !a.miss && a.rSp < A.luck / 500;
+      a.crit = !a.miss && a.rCr < A.crit / 100;
+      a.tm = typeMult(A.type, D.type);
+      a.dmg = a.miss ? 0 : Math.max(1, Math.round(a.base * a.variance * (a.special ? 2 : 1) * (a.crit ? 1.5 : 1) * a.tm));
+      hp[t] = Math.max(0, hp[t] - a.dmg);
+      a.hpAfter = hp[t];
+      a.ko = hp[t] === 0;
+      round.attacks.push(a);
+      count++;
+      if (a.ko) { winner = s; break; }
+    }
+    rounds.push(round);
+  }
+  let judged = false;
+  if (!winner) {
+    judged = true;
+    const rl = hp.L / L.hp, rr = hp.R / R.hp;
+    winner = rl > rr ? 'L' : rr > rl ? 'R' : 'draw';
+  }
+  return { L, R, chars, seed, lo, hi, tie, first, rounds, winner, judged, hp, count, mirror: L.str === R.str };
+}
+
+/* =====================================================
+   효과음 (Web Audio 합성, 기본 꺼짐)
+   ===================================================== */
+const Sound = {
+  on: false, ctx: null, master: null,
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return true; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    this.ctx = new AC();
+    this.master = this.ctx.createGain();
+    this.master.gain.value = 0.55;
+    this.master.connect(this.ctx.destination);
+    return true;
+  },
+  tone(f, dur, o = {}) {
+    const c = this.ctx, t = c.currentTime + (o.delay || 0);
+    const osc = c.createOscillator(), g = c.createGain();
+    osc.type = o.type || 'sine';
+    osc.frequency.setValueAtTime(f, t);
+    if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + dur);
+    const v = o.vol ?? 0.15;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(v, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(this.master);
+    osc.start(t); osc.stop(t + dur + 0.03);
+  },
+  noise(dur, o = {}) {
+    const c = this.ctx, t = c.currentTime + (o.delay || 0);
+    const len = Math.max(1, Math.floor(c.sampleRate * dur));
+    const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource(); src.buffer = buf;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.3;
+    bp.frequency.setValueAtTime(o.from || 500, t);
+    bp.frequency.exponentialRampToValueAtTime(o.to || 2600, t + dur);
+    const g = c.createGain(), v = o.vol ?? 0.15;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(v, t + dur * 0.3);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(this.master);
+    src.start(t); src.stop(t + dur + 0.03);
+  },
+  play(name, arg = 0) {
+    if (!this.on || !this.init()) return;
+    const T = (f, d, o) => this.tone(f, d, o), N = (d, o) => this.noise(d, o);
+    switch (name) {
+      case 'click':   T(1046, 0.07, { type: 'triangle', vol: 0.12 }); break;
+      case 'swing':   N(0.16, { from: 600, to: 3200, vol: 0.12 }); break;
+      case 'hit':     T(700, 0.13, { type: 'square', to: 230, vol: 0.06 }); T(150, 0.12, { vol: 0.22 }); break;
+      case 'crit':    T(988, 0.08, { type: 'square', vol: 0.06 }); T(1480, 0.16, { type: 'square', vol: 0.06, delay: 0.07 }); T(120, 0.16, { vol: 0.25 }); break;
+      case 'special': [523, 659, 784, 1047, 1319].forEach((f, i) => T(f, 0.12, { type: 'triangle', vol: 0.13, delay: i * 0.05 }));
+                      N(0.4, { from: 200, to: 1400, vol: 0.13, delay: 0.22 }); break;
+      case 'miss':    T(380, 0.22, { to: 1500, vol: 0.12 }); break;
+      case 'tick':    T(880, 0.04, { type: 'square', vol: 0.03 }); break;
+      case 'ready':   T(660, 0.12, { type: 'triangle', vol: 0.13 }); break;
+      case 'go':      T(990, 0.08, { type: 'triangle', vol: 0.13 }); T(1320, 0.22, { type: 'triangle', vol: 0.13, delay: 0.08 }); break;
+      case 'final':   [392, 523, 659].forEach((f, i) => T(f, i === 2 ? 0.3 : 0.14, { type: 'square', vol: 0.05, delay: i * 0.14 })); break;
+      case 'ko':      T(720, 0.65, { type: 'triangle', to: 90, vol: 0.18 }); break;
+      case 'win':     [523, 659, 784, 1047].forEach((f, i) => T(f, i === 3 ? 0.4 : 0.13, { type: 'triangle', vol: 0.13, delay: i * 0.13 }));
+                      T(784, 0.4, { type: 'sine', vol: 0.08, delay: 0.39 }); break;
+      case 'draw':    T(440, 0.18, { type: 'triangle', vol: 0.12 }); T(440, 0.3, { type: 'triangle', vol: 0.12, delay: 0.24 }); break;
+      case 'scan':    T(300, 0.35, { to: 1200, vol: 0.08 }); N(0.3, { from: 800, to: 4000, vol: 0.06 }); break;
+      case 'lock':    T(523 * Math.pow(2, arg / 8), 0.07, { type: 'square', vol: 0.05 }); break;
+      case 'type':    [784, 988, 1175, 1568].forEach((f, i) => T(f, 0.14, { type: 'triangle', vol: 0.11, delay: i * 0.05 })); break;
+      case 'equip':   T([392, 523, 659][arg], 0.13, { type: 'triangle', to: [784, 1046, 1318][arg], vol: 0.14 }); break;
+      case 'mirror':  T(1200, 0.25, { type: 'sine', to: 600, vol: 0.1 }); T(600, 0.25, { type: 'sine', to: 1200, vol: 0.1, delay: 0.2 }); break;
+    }
+  }
+};
+
+/* =====================================================
+   입력 화면
+   ===================================================== */
+const state = { L: null, R: null };
+
+function initCards() {
+  for (const side of ['L', 'R']) {
+    const card = $(`.pcard[data-side="${side}"]`);
+    card.innerHTML = `
+      <span class="side-tag">${side === 'L' ? '왼쪽 선수' : '오른쪽 선수'}</span>
+      <input class="name-in" type="text" autocomplete="off" spellcheck="false" placeholder="아무 글자나 입력해 보세요!" aria-label="${side === 'L' ? '왼쪽' : '오른쪽'} 선수 문자열">
+      <div class="len-info"></div>
+      <div class="preview"><div class="pv-slot"></div><span class="pv-q">?</span><span class="pv-q q2">?</span></div>
+      <div class="hash-box">
+        <div class="hash-label"><span>🔐 MD5 해시값</span><button class="link" type="button" data-open="hex">16진수란?</button></div>
+        <div class="chunks">${STATS.map(s => `<div class="chunk" style="background:${s.color}2e"><span class="ci">${s.icon} ${s.name}</span><code>????</code></div>`).join('')}</div>
+        <p class="mystery-note">⚔️ 대결 시작을 누르면 해시값이 공개되고 장비를 장착해요!</p>
+      </div>`;
+    const input = $('.name-in', card);
+    input.value = side === 'L' ? '토끼' : '거북이';
+    input.addEventListener('input', () => updateCard(side));
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) startBattle(); });
+    updateCard(side);
+  }
+}
+
+// 입력 화면에서는 해시를 보여주지 않고 맨몸 캐릭터만 보여준다
+function updateCard(side) {
+  const card = $(`.pcard[data-side="${side}"]`);
+  const str = $('.name-in', card).value;
+  const c = makeChar(str);
+  state[side] = c;
+  const g = graphemes(str).length, bytes = enc.encode(str).length;
+  $('.len-info', card).textContent = str === '' ? '빈 문자열도 해시값이 있어요!' : `글자 ${g}개 · UTF-8 ${bytes}바이트`;
+  $('.pv-slot', card).replaceChildren(fighterEl(c, side, true).el);
+}
+
+function calcRows(c) {
+  return `<tr><th>능력치</th><th>조각</th><th>16진수 → 10진수</th><th>변환</th><th>결과</th></tr>` +
+    STATS.map((s, i) => {
+      const h = c.hash.slice(i * 4, i * 4 + 4), v = c.raw[i];
+      let f, r;
+      if (s.key === 'type') { f = `${v} mod 3 = ${v % 3}`; r = `${TYPES[v % 3].icon} ${TYPES[v % 3].name}`; }
+      else { f = `${s.min} + ⌊${v} × ${s.max - s.min + 1} ÷ 65536⌋`; r = c[s.key] + (s.unit || ''); }
+      return `<tr><td class="n">${s.icon} ${s.name}</td><td><code style="background:${s.color}33">${h}</code></td>
+        <td class="n">${hexBreakdown(h)} = <b>${v}</b></td><td class="n">${f}</td><td class="n"><b>${r}</b></td></tr>`;
+    }).join('');
+}
+
+/* =====================================================
+   대결 재생
+   ===================================================== */
+const ABORT = Symbol('abort');
+let playToken = 0, timeScale = 1, currentSim = null;
+const arena = { f: {} };
+
+function setTS(v) { timeScale = v; document.documentElement.style.setProperty('--ts', v); }
+function sleep(ms, tok) {
+  return new Promise((res, rej) => setTimeout(() => (tok === playToken ? res() : rej(ABORT)), ms / timeScale));
+}
+const TRANSIENT = ['lunge', 'dodge', 'hit', 'swing', 'shake', 'bump', 'in', 'lock', 'pump', 'pulse', 'drop', 'flyin'];
+function retrigger(el, cls) { el.classList.remove(...TRANSIENT); void el.offsetWidth; el.classList.add(cls); }
+function setFace(f, k) { if (!f.el.classList.contains('is-ko') || k === 'ko') f.mouth.textContent = FACES[k]; }
+
+function showView(id) {
+  $$('.view').forEach(v => v.classList.toggle('active', v.id === id));
+  document.body.classList.toggle('on-setup', id === 'setup');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startBattle() {
+  Sound.play('click');
+  currentSim = simulate(state.L, state.R);
+  showView('battle');
+  play(currentSim, true);
+}
+
+function computeLunge() {
+  const fl = arena.f.L, fr = arena.f.R;
+  if (!fl || !fr) return;
+  const l = fl.body.getBoundingClientRect(), r = fr.body.getBoundingClientRect();
+  $('#stage').style.setProperty('--lunge', Math.max(10, r.left - l.right - 6) + 'px');
+}
+
+function resetArena(sim, bare) {
+  const stage = $('#stage');
+  $$('.pop, .banner, .confetti', stage).forEach(e => e.remove());
+  stage.classList.remove('fast', 'final');
+  $('#btnSkip').hidden = true;
+  for (const side of ['L', 'R']) {
+    const c = sim.chars[side];
+    const f = fighterEl(c, side, bare);
+    $(`#slot${side}`).replaceChildren(f.el);
+    arena.f[side] = f;
+    const box = $(`#hp${side}`);
+    $('.tico', box).textContent = bare ? '❓' : TYPES[c.type].icon;
+    $('.who', box).textContent = labelName(c.str);
+    setHP(side, c.hp, true);
+    if (bare) $('.hp-num', box).textContent = '??? / ???';
+  }
+  renderStatCards(sim, bare);
+  $('#scards').classList.toggle('compact', !bare);
+  $('#roundNum').textContent = '준비';
+  $('#ff').hidden = true;
+  $('#ticker').textContent = '두 캐릭터가 경기장에 들어왔어요!';
+  requestAnimationFrame(computeLunge);
+}
+
+/* ---------- 경기장 아래 능력치 카드 & 장착 연출 ---------- */
+const scard = side => $(`.scard[data-side="${side}"]`);
+
+function renderStatCards(sim, bare) {
+  for (const side of ['L', 'R']) {
+    const card = scard(side);
+    card.innerHTML = `
+      <div class="sc-head"><span class="who"></span><span class="type-pill sc-type">❓ ???</span></div>
+      <div class="sc-eq">무기 ❓ · 방어구 ❓</div>
+      <div class="sc-hash">${'<span class="q">????</span>'.repeat(8)}</div>
+      <div class="sc-rows">${STATS.map(s => `<div class="sc-row" style="--hc:${s.color}33;--bc:${s.color}">
+        <span class="si">${s.icon}</span><span class="sn">${s.name}</span><code class="hx">????</code><span class="sv">?</span>
+        ${s.key === 'type' ? '' : '<span class="sb"><i></i></span>'}</div>`).join('')}</div>
+      <details class="calc"><summary>🧮 계산 과정 보기</summary>
+        <div class="calc-wrap"><table class="t"><tr><td>대결 시작 후 공개돼요!</td></tr></table></div>
+        <p class="calc-note">능력치 = 최솟값 + ⌊조각값 × (범위 크기) ÷ 65536⌋ · 속성 = 조각값 mod 3 · <button class="link" type="button" data-open="game">자세히</button></p>
+      </details>`;
+    $('.who', card).textContent = labelName(sim.chars[side].str);
+  }
+  if (!bare) finalizeReveal(sim);
+}
+
+function spinChunk(side, i) {
+  const hx = $$('.sc-row .hx', scard(side))[i];
+  hx.classList.add('spin');
+  return setInterval(() => {
+    hx.textContent = Array.from({ length: 4 }, () => '0123456789abcdef'[(Math.random() * 16) | 0]).join('');
+  }, 45);
+}
+
+function lockChunk(sim, side, i, anim) {
+  const c = sim.chars[side], s = STATS[i], card = scard(side);
+  const row = $$('.sc-row', card)[i], hx = $('.hx', row), h = c.hash.slice(i * 4, i * 4 + 4);
+  hx.classList.remove('spin');
+  hx.textContent = h;
+  const hs = $$('.sc-hash span', card)[i];
+  hs.textContent = h;
+  hs.classList.remove('q');
+  if (s.key === 'type') {
+    $('.sv', row).textContent = TYPES[c.type].icon + TYPES[c.type].name;
+  } else {
+    $('.sv', row).textContent = c[s.key] + (s.unit || '');
+    $('.sb i', row).style.width = Math.max(3, (c[s.key] - s.min) / (s.max - s.min) * 100) + '%';
+  }
+  if (i === 0) $(`#hp${side} .hp-num`).textContent = `${c.hp} / ${c.hp}`;
+  if (anim) retrigger(row, 'lock');
+}
+
+function revealType(sim, side, anim) {
+  const c = sim.chars[side], T = TYPES[c.type], f = arena.f[side];
+  f.el.classList.remove('type-x');
+  f.el.classList.add('type-' + c.type);
+  f.tag.textContent = `${T.icon} ${T.name}`;
+  $(`#hp${side} .tico`).textContent = T.icon;
+  const pill = $('.sc-type', scard(side));
+  pill.textContent = `${T.icon} ${T.name}`;
+  pill.style.background = T.color + '2e';
+  pill.style.color = T.dark;
+  if (anim) { retrigger(f.body, 'pulse'); popup(f, `${T.icon} ${T.name} 속성!`, 'note'); }
+}
+
+function equipPart(side, part, anim) {
+  const el = arena.f[side][part];
+  if (!el) return;
+  if (anim) retrigger(el, part === 'head' ? 'drop' : 'flyin');
+  el.classList.remove('hid');
+}
+
+function revealEquipInfo(sim, side) {
+  const c = sim.chars[side], W = WEAPONS[c.wt], A = ARMORS[c.at];
+  $('.sc-eq', scard(side)).textContent =
+    `무기 ${W.e} ${W.n} ${'⭐'.repeat(c.wt + 1)} · 방어구 ${A.head}${A.shield} ${A.n} ${'⭐'.repeat(c.at + 1)}`;
+}
+
+// 모든 공개 상태를 한 번에 적용 (건너뛰기·다시 보기에서도 사용)
+function finalizeReveal(sim) {
+  for (const side of ['L', 'R']) {
+    for (let i = 0; i < 8; i++) lockChunk(sim, side, i, false);
+    revealType(sim, side, false);
+    ['head', 'shield', 'weapon'].forEach(p => equipPart(side, p, false));
+    revealEquipInfo(sim, side);
+    $('.scard[data-side="' + side + '"] details.calc table').innerHTML = calcRows(sim.chars[side]);
+  }
+}
+
+// 장착 연출 (약 4초): 4자리씩 끊어 능력치로 → 속성 → 장비
+async function reveal(sim, W) {
+  const skipBtn = $('#btnSkip');
+  let skipped = false, wake;
+  const skipP = new Promise(r => (wake = r));
+  skipBtn.onclick = () => { if (skipped) return; skipped = true; Sound.play('click'); wake(); };
+  skipBtn.hidden = false;
+  const SW = ms => (skipped ? Promise.resolve() : Promise.race([W(ms), skipP]));
+  const both = fn => ['L', 'R'].forEach(fn);
+  const spins = [];
+  try {
+    // 능력치 카드가 화면 밖이면 경기장을 맨 위로 올려 함께 보이게 한다
+    if (scard('L').getBoundingClientRect().bottom > window.innerHeight)
+      $('#arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('#roundNum').textContent = '장착';
+    ticker('🔐 두 문자열의 MD5 해시값을 4자리씩 끊어 능력치로 바꾸는 중…');
+    banner('🔐 해시 계산!', 'b-blue', 900);
+    Sound.play('scan');
+    await SW(350);
+    for (let i = 0; i < 8 && !skipped; i++) {
+      both(s => spins.push(spinChunk(s, i)));
+      await SW(190);
+      spins.splice(0).forEach(clearInterval);
+      if (skipped) break;
+      both(s => { lockChunk(sim, s, i, true); retrigger(arena.f[s].body, 'pump'); });
+      Sound.play('lock', i);
+      if (i === 7) { both(s => revealType(sim, s, true)); Sound.play('type'); }
+      await SW(i === 7 ? 380 : 50);
+    }
+    if (!skipped) {
+      ticker('🛡️ 해시값에 맞는 장비를 장착해요!');
+      both(s => equipPart(s, 'head', true));
+      Sound.play('equip', 0);
+      await SW(170);
+    }
+    if (!skipped) {
+      both(s => equipPart(s, 'shield', true));
+      Sound.play('equip', 1);
+      await SW(170);
+    }
+    if (!skipped) {
+      both(s => {
+        const c = sim.chars[s], f = arena.f[s];
+        equipPart(s, 'weapon', true);
+        revealEquipInfo(sim, s);
+        popup(f, `${WEAPONS[c.wt].e} ${'⭐'.repeat(c.wt + 1)}`, 'note', -4);
+        popup(f, `${ARMORS[c.at].head}${ARMORS[c.at].shield} ${'⭐'.repeat(c.at + 1)}`, 'note', -40);
+      });
+      Sound.play('equip', 2);
+      await SW(850);
+    }
+  } finally {
+    spins.forEach(clearInterval);
+    skipBtn.hidden = true;
+    skipBtn.onclick = null;
+  }
+  finalizeReveal(sim);
+  $('#roundNum').textContent = '준비';
+}
+
+function setHP(side, hp, instant) {
+  const c = currentSim.chars[side], pct = hp / c.hp * 100;
+  const box = $(`#hp${side}`), fill = $('.fill', box), ghost = $('.ghost', box);
+  if (instant) fill.style.transition = ghost.style.transition = 'none';
+  fill.style.width = pct + '%';
+  ghost.style.width = pct + '%';
+  fill.classList.toggle('mid', pct <= 50 && pct > 20);
+  fill.classList.toggle('low', pct <= 20);
+  $('.hp-num', box).textContent = `${hp} / ${c.hp}`;
+  if (instant) { void fill.offsetWidth; fill.style.transition = ghost.style.transition = ''; }
+}
+
+function popup(f, text, cls, dy = 0) {
+  const stage = $('#stage');
+  const sr = stage.getBoundingClientRect(), br = f.body.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'pop ' + cls;
+  el.textContent = text;
+  el.style.left = (br.left + br.width / 2 - sr.left) + 'px';
+  el.style.top = Math.max(4, br.top - sr.top - 24 + dy) + 'px';
+  stage.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+function banner(text, cls = '', ms = 1000) {
+  const el = document.createElement('div');
+  el.className = 'banner ' + cls;
+  el.textContent = text;
+  el.style.setProperty('--bd', ms / timeScale + 'ms');
+  $('#stage').appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+function flash(kind) { const fl = $('#flash'); fl.className = 'flash ' + kind; void fl.offsetWidth; fl.classList.add('on'); }
+function shake() { retrigger($('#arena'), 'shake'); }
+function ticker(text) { const t = $('#ticker'); t.textContent = text; retrigger(t, 'in'); }
+function confetti() {
+  if (document.body.classList.contains('lowfx')) return;
+  const stage = $('#stage');
+  const colors = ['#ff6fa5', '#6f8bff', '#ffcf3d', '#5fd3a0', '#c77dff', '#ff9f43'];
+  for (let i = 0; i < 48; i++) {
+    const e = document.createElement('i');
+    e.className = 'confetti';
+    e.style.left = Math.random() * 100 + '%';
+    e.style.background = colors[i % colors.length];
+    e.style.animationDuration = 1.8 + Math.random() * 1.6 + 's';
+    e.style.animationDelay = Math.random() * 0.5 + 's';
+    e.style.setProperty('--rx', (Math.random() * 2 - 1) * 80 + 'px');
+    stage.appendChild(e);
+    e.addEventListener('animationend', () => e.remove());
+  }
+}
+function setRound(n, phase, fastTS) {
+  const r = $('#roundNum');
+  r.textContent = `${n}합`;
+  retrigger(r, 'bump');
+  const ff = $('#ff');
+  if (phase === 'fast') { ff.hidden = false; ff.className = 'ff'; ff.textContent = `⏩ 빨리감기 ×${Math.round(fastTS)}`; }
+  else if (phase === 'final') { ff.hidden = false; ff.className = 'ff final'; ff.textContent = '🔥 최종합'; }
+  else ff.hidden = true;
+}
+
+function logText(a, sim) {
+  const A = sim.chars[a.side], D = sim.chars[a.target];
+  const an = `「${labelName(A.str)}」`, dn = `「${labelName(D.str)}」`;
+  if (a.miss) return `${a.n}합 · ${an}의 ${WEAPONS[A.wt].e} 공격! → ${dn} 휙~ 회피 성공! (MISS)`;
+  const tags = [];
+  if (a.special) tags.push('필살기 ×2');
+  if (a.crit) tags.push('치명타 ×1.5');
+  if (a.tm > 1) tags.push('상성 유리 ×1.2');
+  if (a.tm < 1) tags.push('상성 불리 ×0.8');
+  return `${a.n}합 · ${an}의 ${WEAPONS[A.wt].e} 공격! → ${dn}에게 ${a.dmg} 데미지${tags.length ? ` (${tags.join(', ')})` : ''}` +
+         ` · 남은 체력 ${a.hpAfter}${a.ko ? ' · 쓰러졌다!' : ''}`;
+}
+
+// withReveal: 새 대결이면 장착 연출부터, 다시 보기면 전투만
+async function play(sim, withReveal = false) {
+  const tok = ++playToken;
+  const W = ms => sleep(ms, tok);
+  try {
+    setTS(1);
+    $('#result').hidden = true;
+    resetArena(sim, withReveal);
+    await W(350);
+    if (withReveal) { await reveal(sim, W); await W(250); }
+    $('#scards').classList.add('compact');
+    if (sim.mirror) { banner('🪞 거울 대결!', 'b-blue', 1200); Sound.play('mirror'); await W(1300); }
+    banner('준비~', 'b-blue', 800); Sound.play('ready'); await W(850);
+    banner('시작!', '', 700); Sound.play('go'); await W(750);
+
+    const F = sim.chars[sim.first], S = sim.chars[opp(sim.first)];
+    ticker(sim.tie
+      ? `⚡ 속도가 ${F.spd}로 같아서 왼쪽 「${labelName(F.str)}」 먼저 공격!`
+      : `💨 속도 ${F.spd} > ${S.spd} → 「${labelName(F.str)}」 먼저 공격!`);
+    popup(arena.f[sim.first], '선공!', 'note');
+    await W(1100);
+
+    const last = sim.rounds.length;
+    const fastCount = Math.max(0, last - 6);
+    const fastTS = clamp(fastCount * 2.4 / 7, 4, 10);
+    const stage = $('#stage');
+
+    for (const r of sim.rounds) {
+      const phase = r.n <= 5 ? 'normal' : r.n < last ? 'fast' : 'final';
+      if (phase === 'fast' && timeScale === 1) { setTS(fastTS); stage.classList.add('fast'); }
+      if (phase === 'final') {
+        stage.classList.remove('fast');
+        setTS(1);
+        if (last > 1) { stage.classList.add('final'); setRound(r.n, phase); banner('🔥 최종합!', 'b-red', 1100); Sound.play('final'); await W(1200); }
+      }
+      setRound(r.n, phase, fastTS);
+      for (const a of r.attacks) await playAttack(a, sim, W);
+      await W(phase === 'fast' ? 150 : 350);
+    }
+    await finish(sim, W);
+  } catch (e) {
+    if (e !== ABORT) throw e;
+  }
+}
+
+async function playAttack(a, sim, W) {
+  const fast = timeScale > 1.5;
+  const att = arena.f[a.side], def = arena.f[a.target];
+  if (a.ko) setTS(0.6); // 마지막 일격은 슬로모션
+
+  setFace(att, 'attack');
+  retrigger(att.move, 'lunge');
+  retrigger(att.weapon, 'swing');
+  Sound.play(fast ? 'tick' : 'swing');
+  await W(250);
+
+  if (a.miss) {
+    retrigger(def.move, 'dodge');
+    setFace(def, 'dodge');
+    popup(def, 'MISS', 'miss');
+    if (!fast) Sound.play('miss');
+  } else {
+    if (a.special) { flash('special'); shake(); if (!fast) banner('💥 필살기!', 'b-purple', 800); Sound.play('special'); }
+    else if (a.crit) { flash('crit'); shake(); Sound.play(fast ? 'tick' : 'crit'); }
+    else Sound.play(fast ? 'tick' : 'hit');
+    retrigger(def.body, 'hit');
+    setFace(def, 'hurt');
+    popup(def, `-${a.dmg}`, a.special ? 'special' : a.crit ? 'crit' : 'dmg');
+    if (!fast) {
+      const notes = [];
+      if (a.crit) notes.push('치명타!');
+      if (a.tm > 1) notes.push('상성 유리! ×1.2');
+      if (a.tm < 1) notes.push('상성 불리… ×0.8');
+      if (notes.length) popup(def, notes.join(' · '), 'note', -38);
+    }
+    setHP(a.target, a.hpAfter);
+  }
+  ticker(logText(a, sim));
+  await W(a.ko ? 500 : fast ? 380 : 650);
+  setFace(att, 'normal');
+  if (!a.ko) setFace(def, 'normal');
+}
+
+async function finish(sim, W) {
+  setTS(1);
+  const stage = $('#stage');
+  stage.classList.remove('fast', 'final');
+  $('#ff').hidden = true;
+
+  if (sim.winner === 'draw') {
+    banner('⏰ 판정!', 'b-gold', 1100); await W(1200);
+    banner('🤝 무승부!', 'b-mint', 1800); Sound.play('draw');
+    setFace(arena.f.L, 'dodge'); setFace(arena.f.R, 'dodge');
+    ticker('50합 동안 승부가 나지 않았고, 남은 체력 비율도 똑같아요!');
+  } else {
+    const win = arena.f[sim.winner], lose = arena.f[opp(sim.winner)];
+    const wc = sim.chars[sim.winner];
+    if (sim.judged) {
+      banner('⏰ 판정!', 'b-gold', 1100); Sound.play('final'); await W(1200);
+      setFace(lose, 'hurt');
+      ticker('50합이 끝났어요! 남은 체력 비율이 더 높은 쪽이 이겨요.');
+    } else {
+      lose.el.classList.add('is-ko');
+      setFace(lose, 'ko');
+      retrigger(lose.move, 'ko');
+      lose.move.classList.add('ko');
+      Sound.play('ko');
+      shake();
+      banner('K.O.!', 'b-red', 1300);
+      await W(1400);
+    }
+    setFace(win, 'win');
+    win.move.classList.add('win');
+    Sound.play('win');
+    confetti();
+    banner(`🏆 「${labelName(wc.str)}」 승리!`, 'b-gold', 2000);
+  }
+  await W(1700);
+  showResult(sim);
+  setTimeout(() => $('#result').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+/* =====================================================
+   결과 화면
+   ===================================================== */
+function radarSVG(L, R) {
+  const keys = STATS.filter(s => s.key !== 'type');
+  const n = keys.length, cx = 150, cy = 142, rad = 98;
+  const pt = (i, r) => {
+    const ang = -Math.PI / 2 + i * 2 * Math.PI / n;
+    return [cx + Math.cos(ang) * r, cy + Math.sin(ang) * r].map(v => v.toFixed(1));
+  };
+  let g = '';
+  for (const lv of [0.25, 0.5, 0.75, 1])
+    g += `<polygon points="${keys.map((_, i) => pt(i, rad * lv).join(',')).join(' ')}" fill="none" stroke="#eadbe4" stroke-width="1"/>`;
+  keys.forEach((s, i) => {
+    const [x, y] = pt(i, rad), [lx, ly] = pt(i, rad + 22);
+    g += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#eadbe4"/>`;
+    g += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#85718c">${s.icon}${s.name}</text>`;
+  });
+  const poly = (c, col) => `<polygon points="${keys.map((s, i) => pt(i, rad * Math.max(0.06, (c[s.key] - s.min) / (s.max - s.min))).join(',')).join(' ')}" fill="${col}38" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  return `<svg class="radar" viewBox="0 0 300 285" role="img" aria-label="두 캐릭터의 능력치 비교 그래프">${g}${poly(L, '#ff6fa5')}${poly(R, '#6f8bff')}</svg>`;
+}
+
+function showResult(sim) {
+  const { L, R } = sim;
+  const nL = esc(labelName(L.str)), nR = esc(labelName(R.str));
+  let title, reason;
+  if (sim.winner === 'draw') {
+    title = '🤝 무승부!';
+    reason = '50합 동안 승부가 나지 않았고, 남은 체력 비율도 같아요.';
+  } else {
+    const wc = sim.chars[sim.winner];
+    title = `🏆 「${esc(labelName(wc.str))}」 승리!`;
+    reason = sim.judged
+      ? `⏰ 50합 판정승 · 남은 체력 ${Math.round(sim.hp.L / L.hp * 100)}% vs ${Math.round(sim.hp.R / R.hp * 100)}% (왼쪽 vs 오른쪽)`
+      : `💥 ${sim.rounds.length}합 KO 승리 · 총 ${sim.count}번 공격`;
+  }
+
+  const cmpRows = STATS.map(s => {
+    if (s.key === 'type') {
+      const m = typeMult(L.type, R.type);
+      return `<tr><td class="${m > 1 ? 'w L' : ''}">${TYPES[L.type].icon} ${TYPES[L.type].name}</td><td>${s.icon} ${s.name}</td><td class="${m < 1 ? 'w R' : ''}">${TYPES[R.type].icon} ${TYPES[R.type].name}</td></tr>`;
+    }
+    const a = L[s.key], b = R[s.key], u = s.unit || '';
+    return `<tr><td class="${a > b ? 'w L' : ''}">${a}${u}</td><td>${s.icon} ${s.name}</td><td class="${b > a ? 'w R' : ''}">${b}${u}</td></tr>`;
+  }).join('');
+
+  const m = typeMult(L.type, R.type);
+  const typeNote = m === 1 ? '두 캐릭터의 속성이 같아서 상성 효과가 없었어요.'
+    : `${m > 1 ? `왼쪽 「${nL}」` : `오른쪽 「${nR}」`} 쪽이 속성 상성에서 유리했어요. (×1.2 / ×0.8)`;
+  const firstNote = sim.tie
+    ? `속도가 ${L.spd}로 같아서 규칙대로 <b>왼쪽</b>이 먼저 공격했어요. 이 경우에는 좌우를 바꾸면 결과가 달라질 수 있어요!`
+    : `속도가 더 높은 「${esc(labelName(sim.chars[sim.first].str))}」 쪽이 먼저 공격했어요.`;
+
+  const logRows = sim.rounds.flatMap(r => r.attacks).map(a => {
+    const A = sim.chars[a.side], D = sim.chars[a.target];
+    let res, calc;
+    if (a.miss) {
+      res = 'MISS 🌀';
+      calc = `회피 난수 ${a.rEva.toFixed(3)} &lt; ${(D.eva / 100).toFixed(2)}`;
+    } else {
+      const tags = [a.special && '필살기', a.crit && '치명타', a.tm > 1 && '상성↑', a.tm < 1 && '상성↓'].filter(Boolean);
+      res = `<b>${a.dmg}</b>${tags.length ? ' · ' + tags.join(' ') : ''}`;
+      calc = `${A.atk}×100÷(100+${D.def}) = ${a.base.toFixed(1)} × ${a.variance.toFixed(3)}${a.special ? ' × 2' : ''}${a.crit ? ' × 1.5' : ''}${a.tm !== 1 ? ' × ' + a.tm : ''} → ${a.dmg}`;
+    }
+    return `<tr class="${a.ko ? 'ko' : a.miss ? 'miss' : ''}"><td class="n">${a.n}</td>
+      <td class="who"><span class="sd" style="background:var(--${a.side})"></span>${esc(labelName(A.str))} ${WEAPONS[A.wt].e}</td>
+      <td class="n">${res}</td><td class="n">${calc}</td>
+      <td class="who">${esc(labelName(D.str))} ${a.hpAfter}${a.ko ? ' 💫' : ''}</td></tr>`;
+  }).join('');
+
+  const box = $('#result');
+  box.innerHTML = `
+    <h2 class="win-title">${title}</h2>
+    <p class="win-reason">${reason}</p>
+    <div class="btn-row">
+      <button class="btn pink" type="button" id="btnReplay">🔁 다시 보기</button>
+      <button class="btn" type="button" id="btnNew">↩ 새 대결</button>
+      <button class="btn ghost" type="button" data-open="game">🎮 규칙 보기</button>
+    </div>
+    <div class="res-grid">
+      <div class="panel">
+        <h3>📊 능력치 비교</h3>
+        <div class="legend"><span><i style="background:#ff6fa5"></i><span style="white-space:pre">${nL}</span></span><span><i style="background:#6f8bff"></i><span style="white-space:pre">${nR}</span></span></div>
+        ${radarSVG(L, R)}
+        <div class="calc-wrap"><table class="t cmp"><tr><th style="text-align:center">왼쪽</th><th style="text-align:center">능력치</th><th style="text-align:center">오른쪽</th></tr>${cmpRows}</table></div>
+      </div>
+      <div class="panel">
+        <h3>🎲 결과가 항상 같은 이유</h3>
+        <p>이번 대결의 모든 '무작위'는 두 해시값으로 만든 <b>시드</b>에서 나왔어요.</p>
+        <div class="seed-box">작은 해시: ${sim.lo}<br>큰 해시: ${sim.hi}<br>시드 = MD5(작은 해시 + 큰 해시)<br>　　 = <b>${sim.seed}</b></div>
+        <p>같은 두 문자열이라면 어느 컴퓨터에서, 몇 번을 해도 똑같은 결과가 나와요. 결정론적이니까요!</p>
+        <p>💨 ${firstNote}</p>
+        <p>🔮 ${typeNote}</p>
+        ${sim.mirror ? '<p>🪞 같은 문자열끼리의 거울 대결! 능력치는 완전히 같지만, 시드로 만든 난수가 승부를 갈랐어요.</p>' : ''}
+      </div>
+    </div>
+    <details class="log"><summary>📜 전체 전투 기록 (공격 ${sim.count}번)</summary>
+      <div class="log-wrap"><table class="t"><tr><th>합</th><th>공격</th><th>결과</th><th>계산</th><th>남은 체력</th></tr>${logRows}</table></div>
+    </details>`;
+  box.hidden = false;
+  $('#btnReplay').addEventListener('click', () => { Sound.play('click'); $('#arena').scrollIntoView({ behavior: 'smooth' }); play(sim); });
+  $('#btnNew').addEventListener('click', () => { Sound.play('click'); leaveBattle(); });
+}
+
+function leaveBattle() {
+  playToken++;
+  setTS(1);
+  showView('setup');
+}
+
+/* =====================================================
+   해시 배움터
+   ===================================================== */
+const TABS = [
+  ['intro', '🤔 해시란?'], ['hex', '🔢 16진수'], ['props', '🧬 해시의 성질'], ['lab', '🔬 실험실'],
+  ['game', '🎮 게임 속 해시'], ['use', '🌍 어디에 쓰일까?'], ['security', '🔐 MD5와 보안'], ['deep', '🧠 심화']
+];
+function selectTab(id) {
+  $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === id));
+  $$('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === id));
+  $('#learnBody').scrollTop = 0;
+  const on = $(`.tab[data-tab="${id}"]`);
+  if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+function openLearn(id) {
+  $('#learn').hidden = false;
+  document.body.style.overflow = 'hidden';
+  selectTab(id || 'intro');
+  $('#learnClose').focus();
+}
+function closeLearn() {
+  $('#learn').hidden = true;
+  document.body.style.overflow = '';
+}
+
+function initLearn() {
+  $('#tabs').innerHTML = TABS.map(([id, t]) => `<button class="tab" type="button" data-tab="${id}">${t}</button>`).join('');
+  $('#tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) selectTab(b.dataset.tab); });
+  $('#learnClose').addEventListener('click', closeLearn);
+  $('#learn').addEventListener('click', e => { if (e.target.id === 'learn') closeLearn(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#learn').hidden) closeLearn(); });
+
+  $$('[data-md5]').forEach(el => { el.textContent = md5(el.dataset.md5); });
+
+  // 해시란?
+  const examples = ['a', '가', 'hello', 'Hello', '', '해시 함수는 입력이 아무리 길어도 언제나 같은 길이의 값을 만들어 내요. 이 문장은 꽤 길지만 결과는 여전히 32자리예요!'];
+  $('#introTable').innerHTML = '<tr><th>입력</th><th>MD5 해시값 (32자리)</th></tr>' +
+    examples.map(s => `<tr><td style="white-space:normal;min-width:120px">${s === '' ? '<i>(빈 문자열)</i>' : esc(s)}</td><td><code>${md5(s)}</code></td></tr>`).join('');
+
+  // 16진수
+  $('#hexGrid').innerHTML = Array.from({ length: 16 }, (_, i) => `<div><b>${i.toString(16)}</b>${i}</div>`).join('');
+  const hexIn = $('#hexIn');
+  const updHex = () => {
+    const v = hexIn.value.toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 4);
+    if (hexIn.value !== v) hexIn.value = v;
+    if (!v) { $('#hexOut').innerHTML = '0~9, a~f만 쓸 수 있어요.'; return; }
+    const h = v.padStart(4, '0'), n = parseInt(h, 16);
+    $('#hexOut').innerHTML = `<div class="formula">${h.split('').map((d, j) => `${d} → ${String(parseInt(d, 16)).padStart(2)} × ${String(PLACE[j]).padStart(4)} = ${parseInt(d, 16) * PLACE[j]}`).join('\n')}
+합계 = <b>${n}</b>
+2진수 = ${n.toString(2).padStart(16, '0').replace(/(.{4})(?=.)/g, '$1 ')}</div>`;
+  };
+  hexIn.addEventListener('input', updHex);
+  updHex();
+
+  // 눈사태 예시
+  const ha = md5('apple'), hb = md5('Apple');
+  $('#avalancheEx').innerHTML = `<div><code>apple</code> → <span class="diffhash">${diffSpans(ha, hb)}</span></div>
+    <div><code>Apple</code> → <span class="diffhash">${diffSpans(hb, ha)}</span></div>
+    <p style="margin:6px 0 0">첫 글자의 대소문자만 바꿨는데 128비트 중 <b>${bitDiff(ha, hb)}비트</b>가 달라졌어요.</p>`;
+
+  // 실험실
+  const quick = [['apple', 'Apple', 'apple ↔ Apple'], ['MD5 대결', 'MD5 대결 ', '끝에 공백 하나'], ['가', '각', '가 ↔ 각'],
+                 ['1', '2', '1 ↔ 2'], ['', ' ', '빈 문자열 ↔ 공백'], ['hello.', 'hello!', '. ↔ !']];
+  $('#labQuick').innerHTML = quick.map((q, i) => `<button class="chip" type="button" data-q="${i}">${esc(q[2])}</button>`).join('');
+  $('#labQuick').addEventListener('click', e => {
+    const b = e.target.closest('[data-q]'); if (!b) return;
+    const q = quick[+b.dataset.q];
+    $('#labA').value = q[0]; $('#labB').value = q[1];
+    updateLab();
+  });
+  $('#labA').addEventListener('input', updateLab);
+  $('#labB').addEventListener('input', updateLab);
+  updateLab();
+
+  // 게임 속 해시
+  $('#gameStatTable').innerHTML = '<tr><th>조각</th><th>위치</th><th>능력치</th><th>범위</th><th>하는 일</th></tr>' +
+    STATS.map((s, i) => `<tr><td class="n"><code style="background:${s.color}33">${i + 1}번</code></td><td class="n">${i * 4 + 1}~${i * 4 + 4}번째</td>
+      <td class="n">${s.icon} ${s.name}</td><td class="n">${s.key === 'type' ? '🔥 💧 🌿' : `${s.min}~${s.max}${s.unit || ''}`}</td><td>${s.desc}</td></tr>`).join('');
+  const ex = makeChar('hello'), h0 = ex.hash.slice(0, 4), v0 = ex.raw[0];
+  $('#gameExample').innerHTML = `<b>예시</b> · <code>hello</code>의 MD5 = <code>${ex.hash}</code><br>
+    첫 조각 <code>${h0}</code> = ${hexBreakdown(h0)} = <b>${v0}</b><br>
+    체력 = 300 + ⌊${v0} × 700 ÷ 65536⌋ = 300 + ${Math.floor(v0 * 700 / 65536)} = <b>${ex.hp}</b>`;
+  $('#equipTable').innerHTML = '<tr><th>등급</th><th>공격력</th><th>무기</th><th>방어력</th><th>방어구</th></tr>' +
+    WEAPONS.map((w, t) => `<tr><td class="n">${'⭐'.repeat(t + 1)}</td><td class="n">${tierRange(t, 30, 99)}</td><td class="n">${w.e} ${w.n}</td>
+      <td class="n">${tierRange(t, 10, 79)}</td><td class="n">${ARMORS[t].head}${ARMORS[t].shield} ${ARMORS[t].n}</td></tr>`).join('');
+
+  // 보안: SHA-256 비교
+  const shaIn = $('#shaIn');
+  let shaSeq = 0;
+  const updSha = async () => {
+    const v = shaIn.value, my = ++shaSeq;
+    $('#shaMd5').textContent = md5(v);
+    if (window.crypto && crypto.subtle) {
+      const buf = await crypto.subtle.digest('SHA-256', enc.encode(v));
+      if (my === shaSeq) $('#shaOut').textContent = Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
+    } else {
+      $('#shaOut').textContent = '(이 환경에서는 SHA-256을 계산할 수 없어요. https 주소에서 열면 보여요.)';
+    }
+  };
+  shaIn.addEventListener('input', updSha);
+  updSha();
+
+  // 심화
+  $('#kValues').textContent = Array.from(MD5_K.slice(0, 4), (k, i) => `K[${i}] = ${k.toString(16).padStart(8, '0')}`).join('   ') + '   …   (모두 64개)';
+  const bdIn = $('#bdIn');
+  const updBd = () => {
+    const n = clamp(parseInt(bdIn.value, 10) || 1, 1, 366);
+    let p = 1;
+    for (let i = 0; i < n; i++) p *= (365 - i) / 365;
+    $('#bdOut').innerHTML = `생일이 같은 두 사람이 있을 확률 ≈ <b>${((1 - p) * 100).toFixed(1)}%</b>`;
+  };
+  bdIn.addEventListener('input', updBd);
+  updBd();
+  const N = 2 ** 128;
+  const ks = [['100만 개 (10⁶)', 1e6], ['10억 개 (10⁹)', 1e9], ['1경 개 (10¹⁶)', 1e16], ['2⁶⁴ ≈ 1844경 개', 2 ** 64], ['2⁶⁵ ≈ 3689경 개', 2 ** 65], ['2⁷⁰ 개', 2 ** 70]];
+  const fmtP = p => {
+    const pct = p * 100;
+    if (pct >= 0.1) return pct.toFixed(1) + '%';
+    const [mm, ee] = pct.toExponential(1).split('e');
+    return `${mm} × 10<sup>${+ee}</sup> %`;
+  };
+  $('#collTable').innerHTML = '<tr><th>해시한 개수 k</th><th>MD5 충돌이 하나라도 생길 확률</th></tr>' +
+    ks.map(([l, k]) => `<tr><td class="n">${l}</td><td>${fmtP(-Math.expm1(-k * k / (2 * N)))}</td></tr>`).join('');
+}
+
+function diffSpans(a, b) { return a.split('').map((ch, i) => ch === b[i] ? ch : `<span class="d">${ch}</span>`).join(''); }
+function bitDiff(a, b) {
+  let n = 0;
+  for (let i = 0; i < 32; i++) { let x = parseInt(a[i], 16) ^ parseInt(b[i], 16); while (x) { n += x & 1; x >>= 1; } }
+  return n;
+}
+
+function updateLab() {
+  const a = $('#labA').value, b = $('#labB').value;
+  const ha = md5(a), hb = md5(b);
+  $('#labHA').innerHTML = diffSpans(ha, hb);
+  $('#labHB').innerHTML = diffSpans(hb, ha);
+  let hexD = 0;
+  for (let i = 0; i < 32; i++) if (ha[i] !== hb[i]) hexD++;
+  const bd = bitDiff(ha, hb);
+  $('#labSummary').innerHTML = a === b
+    ? '두 입력이 똑같아서 해시값도 완전히 같아요. (결정성)'
+    : `16진수 32자리 중 <b>${hexD}자리</b>, 128비트 중 <b>${bd}비트 (${(bd / 1.28).toFixed(1)}%)</b>가 달라요.`;
+  let cells = '';
+  for (let i = 0; i < 32; i++) {
+    const x = parseInt(ha[i], 16), y = parseInt(hb[i], 16);
+    for (let j = 3; j >= 0; j--) cells += `<i class="${((x >> j) & 1) !== ((y >> j) & 1) ? 'd' : ''}"></i>`;
+  }
+  $('#labBits').innerHTML = cells;
+
+  // UTF-8 바이트
+  const bytes = enc.encode(a);
+  if (a === '') {
+    $('#labBytes').innerHTML = '<p class="hint">빈 문자열은 바이트가 0개예요. 그래도 패딩 덕분에 MD5를 계산할 수 있어요!</p>';
+  } else {
+    const gs = graphemes(a);
+    const shown = gs.slice(0, 40);
+    $('#labBytes').innerHTML = `<div class="bytes">${shown.map(g => `<div class="bchar"><span class="c">${esc(g.replace(/ /g, '␣'))}</span><code>${Array.from(enc.encode(g), x => x.toString(16).padStart(2, '0')).join(' ')}</code></div>`).join('')}${gs.length > 40 ? '<div class="bchar"><span class="c">…</span></div>' : ''}</div>
+      <p class="hint">글자 ${gs.length}개 → <b>${bytes.length}바이트</b> = ${bytes.length * 8}비트</p>`;
+  }
+
+  // 패딩
+  const len = bytes.length, total = (((len + 8) >>> 6) + 1) * 64, blocks = total / 64;
+  const bitLen = len * 8;
+  const lenBytes = [];
+  for (let i = 0; i < 8; i++) lenBytes.push(Math.floor(bitLen / 2 ** (8 * i)) % 256);
+  let html = `<p>${len}바이트 메시지 → 패딩 후 <b>${total}바이트 = 512비트 블록 ${blocks}개</b></p>`;
+  if (blocks <= 3) {
+    for (let b0 = 0; b0 < blocks; b0++) {
+      let cellsP = '';
+      for (let i = b0 * 64; i < b0 * 64 + 64; i++) {
+        let v, k;
+        if (i < len) { v = bytes[i]; k = 'm'; }
+        else if (i === len) { v = 0x80; k = 'p'; }
+        else if (i >= total - 8) { v = lenBytes[i - (total - 8)]; k = 'l'; }
+        else { v = 0; k = ''; }
+        cellsP += `<span class="${k}">${v.toString(16).padStart(2, '0')}</span>`;
+      }
+      html += `<div class="padblk"><div class="lbl">블록 ${b0 + 1}</div><div class="padgrid">${cellsP}</div></div>`;
+    }
+    html += `<p class="hint">마지막 8바이트 = 원래 길이 ${bitLen}비트를 16진수로 적고, 작은 자리 바이트부터 거꾸로(리틀 엔디언) 놓은 것이에요.</p>`;
+  } else {
+    html += '<p class="hint">블록이 많아서 그림은 생략했어요. 입력을 짧게 줄이면 볼 수 있어요.</p>';
+  }
+  $('#labPad').innerHTML = html;
+}
+
+/* =====================================================
+   시작
+   ===================================================== */
+function init() {
+  initCards();
+  initLearn();
+
+  $$('.btn-start').forEach(b => b.addEventListener('click', startBattle));
+  $('#btnBack').addEventListener('click', () => { Sound.play('click'); leaveBattle(); });
+  $('#btnSwap').addEventListener('click', () => {
+    const a = $('.pcard[data-side="L"] .name-in'), b = $('.pcard[data-side="R"] .name-in');
+    [a.value, b.value] = [b.value, a.value];
+    updateCard('L'); updateCard('R');
+    Sound.play('click');
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-open]');
+    if (b) { Sound.play('click'); openLearn(b.dataset.open); }
+  });
+
+  const btnSound = $('#btnSound');
+  btnSound.addEventListener('click', () => {
+    Sound.on = !Sound.on;
+    btnSound.textContent = Sound.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐';
+    btnSound.classList.toggle('on', Sound.on);
+    btnSound.setAttribute('aria-pressed', String(Sound.on));
+    Sound.play('click');
+  });
+
+  const btnFx = $('#btnFx');
+  const setFx = full => {
+    document.body.classList.toggle('lowfx', !full);
+    btnFx.textContent = full ? '✨ 효과 켜짐' : '🫧 효과 줄임';
+    btnFx.setAttribute('aria-pressed', String(full));
+  };
+  setFx(!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
+  btnFx.addEventListener('click', () => { setFx(document.body.classList.contains('lowfx')); Sound.play('click'); });
+
+  window.addEventListener('resize', computeLunge);
+}
+init();
+</script>
+</body>
+</html>
